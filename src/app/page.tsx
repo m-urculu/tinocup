@@ -1,65 +1,65 @@
-import Image from "next/image";
+// @file src/app/page.tsx
+// @description Landing page with WhatsApp OTP login — auto-creates profile + joins group on first login
+// @depends components/LoginForm, lib/constants, lib/supabase/server
 
-export default function Home() {
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
+import { LoginForm } from "@/components/LoginForm"
+import { DEFAULT_GROUP_ID } from "@/lib/constants"
+
+export default async function LandingPage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (user) {
+    // Check if profile exists by user ID
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .single()
+
+    if (!profile && user.phone) {
+      // Phone OTP login — match existing profile by phone and update its ID
+      const phone = user.phone.startsWith("+") ? user.phone : `+${user.phone}`
+      const { data: existingByPhone } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("phone", phone)
+        .single()
+
+      if (existingByPhone) {
+        // Migrate all records from old ID to new auth user ID
+        const oldId = existingByPhone.id
+        await supabase.from("player_ratings").update({ user_id: user.id }).eq("user_id", oldId)
+        await supabase.from("group_members").update({ user_id: user.id }).eq("user_id", oldId)
+        await supabase.from("profiles").update({ id: user.id }).eq("id", oldId)
+      }
+    }
+
+    redirect(`/group/${DEFAULT_GROUP_ID}`)
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex min-h-screen flex-col items-center justify-center px-4">
+      <div className="w-full max-w-sm space-y-8">
+        {/* --- Logo --- */}
+        <div className="text-center">
+          <h1 className="font-[family-name:var(--font-heading)] text-6xl tracking-[0.2em] text-gold-shimmer">
+            TINOCUP
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-2 text-sm text-muted-foreground">
+            O teu grupo de futebol
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* --- Login Card --- */}
+        <div className="glass rounded-2xl p-6">
+          <LoginForm />
         </div>
-      </main>
+      </div>
     </div>
-  );
+  )
 }
