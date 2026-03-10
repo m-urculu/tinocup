@@ -51,7 +51,7 @@ export default function StatsView({ players, currentUserId }: StatsViewProps) {
   return (
     <div className="space-y-4">
       {/* --- Player selector (horizontal scroll) --- */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pt-1 pb-2 -mx-4 px-4 scrollbar-hide">
         {players.map((p) => {
           const active = p.userId === selectedId
           const pInitials = p.displayName
@@ -69,7 +69,7 @@ export default function StatsView({ players, currentUserId }: StatsViewProps) {
               }`}
             >
               <div
-                className={`relative size-11 rounded-full overflow-hidden border-2 transition-colors ${
+                className={`relative size-14 rounded-full overflow-hidden border-2 transition-colors ${
                   active ? "border-gold" : "border-transparent"
                 }`}
               >
