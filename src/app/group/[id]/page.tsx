@@ -1,11 +1,11 @@
 // @file src/app/group/[id]/page.tsx
-// @description Group dashboard — upcoming games, quick stats
+// @description Group dashboard — user profile card, quick stats, upcoming games
 // @depends lib/supabase/server
 
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
+import Image from "next/image"
 import { Calendar, Users, Trophy, Plus } from "lucide-react"
-import StatsRadar from "@/components/stats/StatsRadar"
 
 export default async function GroupDashboardPage({
   params,
@@ -18,6 +18,13 @@ export default async function GroupDashboardPage({
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  // Fetch user profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, avatar_url")
+    .eq("id", user?.id ?? "")
+    .single()
 
   // Fetch upcoming games (no join — avoids RLS issues on fields)
   const { data: upcomingGames } = await supabase
@@ -61,8 +68,61 @@ export default async function GroupDashboardPage({
     .eq("user_id", user?.id ?? "")
     .single()
 
+  // User initials
+  const displayName = profile?.display_name ?? "Jogador"
+  const initials = displayName
+    .split(" ")
+    .map((w: string) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+
   return (
     <div className="space-y-6">
+      {/* --- User Profile Card --- */}
+      <div className="glass rounded-xl p-4">
+        <div className="flex items-center gap-3">
+          <div className="relative size-14 rounded-full overflow-hidden border-2 border-gold shrink-0">
+            {profile?.avatar_url ? (
+              <Image
+                src={profile.avatar_url}
+                alt={displayName}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full bg-white/10 flex items-center justify-center text-lg font-bold text-muted-foreground">
+                {initials}
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-base truncate">{displayName}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <Trophy className="size-3.5 text-gold" />
+              <span className="font-[family-name:var(--font-heading)] text-lg text-gold">
+                {myRating?.rating ?? 1000}
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-3 text-xs text-center">
+            <div>
+              <p className="font-bold text-green-400">{myRating?.wins ?? 0}</p>
+              <p className="text-[9px] text-muted-foreground">V</p>
+            </div>
+            <div>
+              <p className="font-bold text-yellow-400">{myRating?.draws ?? 0}</p>
+              <p className="text-[9px] text-muted-foreground">E</p>
+            </div>
+            <div>
+              <p className="font-bold text-red-400">{myRating?.losses ?? 0}</p>
+              <p className="text-[9px] text-muted-foreground">D</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* --- Quick Stats --- */}
       <div className="grid grid-cols-3 gap-3">
         <div className="glass rounded-xl p-3 text-center">
@@ -73,30 +133,22 @@ export default async function GroupDashboardPage({
           <p className="text-[10px] text-muted-foreground">Jogadores</p>
         </div>
         <div className="glass rounded-xl p-3 text-center">
-          <Trophy className="mx-auto mb-1 size-5 text-gold" />
-          <p className="font-[family-name:var(--font-heading)] text-2xl text-foreground">
-            {myRating?.rating ?? 1000}
-          </p>
-          <p className="text-[10px] text-muted-foreground">Meu Rating</p>
-        </div>
-        <div className="glass rounded-xl p-3 text-center">
           <Calendar className="mx-auto mb-1 size-5 text-electric" />
           <p className="font-[family-name:var(--font-heading)] text-2xl text-foreground">
             {myRating?.games_played ?? 0}
           </p>
           <p className="text-[10px] text-muted-foreground">Jogos</p>
         </div>
-      </div>
-
-      {/* --- FIFA-style Radar Chart --- */}
-      <div className="glass rounded-xl p-4 pt-5">
-        <StatsRadar
-          wins={myRating?.wins ?? 0}
-          draws={myRating?.draws ?? 0}
-          losses={myRating?.losses ?? 0}
-          goals={myRating?.goals ?? 0}
-          gamesPlayed={myRating?.games_played ?? 0}
-        />
+        <div className="glass rounded-xl p-3 text-center">
+          <svg className="mx-auto mb-1 size-5 text-electric" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 2 L14.5 8 L12 6.5 L9.5 8 Z M2 12 L8 9.5 L6.5 12 L8 14.5 Z M22 12 L16 14.5 L17.5 12 L16 9.5 Z M12 22 L9.5 16 L12 17.5 L14.5 16 Z" />
+          </svg>
+          <p className="font-[family-name:var(--font-heading)] text-2xl text-foreground">
+            {myRating?.goals ?? 0}
+          </p>
+          <p className="text-[10px] text-muted-foreground">Golos</p>
+        </div>
       </div>
 
       {/* --- New Game Button --- */}
