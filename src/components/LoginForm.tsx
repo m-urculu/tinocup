@@ -21,15 +21,17 @@ type Step = "phone" | "otp"
 
 export function LoginForm() {
   const [step, setStep] = useState<Step>("phone")
-  const [phone, setPhone] = useState("+351")
+  const [phone, setPhone] = useState("")
   const [otp, setOtp] = useState("")
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
   const router = useRouter()
 
+  const fullPhone = `+351${phone.replace(/\s/g, "")}`
+
   async function handleSendOtp() {
-    const cleaned = phone.replace(/\s/g, "")
-    if (cleaned.length < 10) {
+    const digits = phone.replace(/\s/g, "")
+    if (digits.length < 9) {
       toast.error("Introduz um número de telefone válido")
       return
     }
@@ -37,7 +39,7 @@ export function LoginForm() {
     setLoading(true)
 
     // Check if phone belongs to a registered member
-    const { exists } = await checkPhoneExists(cleaned)
+    const { exists } = await checkPhoneExists(fullPhone)
     if (!exists) {
       toast.error("Este número não está registado. Pede ao admin do grupo para te adicionar.")
       setLoading(false)
@@ -45,7 +47,7 @@ export function LoginForm() {
     }
 
     const { error } = await supabase.auth.signInWithOtp({
-      phone: cleaned,
+      phone: fullPhone,
     })
 
     if (error) {
@@ -67,7 +69,7 @@ export function LoginForm() {
 
     setLoading(true)
     const { error } = await supabase.auth.verifyOtp({
-      phone: phone.replace(/\s/g, ""),
+      phone: fullPhone,
       token: otp,
       type: "sms",
     })
@@ -86,7 +88,7 @@ export function LoginForm() {
     return (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground text-center">
-          Introduz o código enviado para {phone}
+          Introduz o código enviado para {fullPhone}
         </p>
         <Input
           type="text"
@@ -117,14 +119,18 @@ export function LoginForm() {
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 h-12 px-3 rounded-md border border-white/10 bg-white/5 text-muted-foreground text-base shrink-0">
+          <Phone className="size-4" />
+          <span>+351</span>
+        </div>
         <Input
           type="tel"
-          placeholder="+351 912 345 678"
+          inputMode="numeric"
+          placeholder="912 345 678"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="h-12 pl-10 text-base bg-white/5 border-white/10"
+          onChange={(e) => setPhone(e.target.value.replace(/[^\d\s]/g, ""))}
+          className="h-12 text-base bg-white/5 border-white/10 flex-1"
           autoFocus
         />
       </div>

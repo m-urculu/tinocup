@@ -182,15 +182,22 @@ export default function SettingsPage() {
       return
     }
 
+    // Ensure +351 prefix
+    let cleanPhone = phone.trim().replace(/\s/g, "")
+    if (!cleanPhone.startsWith("+")) {
+      cleanPhone = `+351${cleanPhone}`
+    }
+
     const { error } = await supabase
       .from("profiles")
-      .update({ phone: phone.trim() })
+      .update({ phone: cleanPhone })
       .eq("id", user.id)
 
     if (error) {
       toast.error(error.message)
     } else {
-      setSavedPhone(phone.trim())
+      setPhone(cleanPhone)
+      setSavedPhone(cleanPhone)
       toast.success("Número guardado")
     }
     setSavingPhone(false)
