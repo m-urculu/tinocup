@@ -4,7 +4,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import { Calendar, Users, Trophy, Plus } from "lucide-react"
+import { Calendar, Users, Trophy, Plus, Target, TrendingUp, Swords } from "lucide-react"
 
 export default async function GroupDashboardPage({
   params,
@@ -86,6 +86,91 @@ export default async function GroupDashboardPage({
           <p className="text-[10px] text-muted-foreground">Jogos</p>
         </div>
       </div>
+
+      {/* --- My Stats Card --- */}
+      {(() => {
+        const wins = myRating?.wins ?? 0
+        const draws = myRating?.draws ?? 0
+        const losses = myRating?.losses ?? 0
+        const goals = myRating?.goals ?? 0
+        const gamesPlayed = myRating?.games_played ?? 0
+        const total = wins + draws + losses || 1
+        const winPct = Math.round((wins / total) * 100)
+        const drawPct = Math.round((draws / total) * 100)
+        const lossPct = 100 - winPct - drawPct
+        return (
+          <div className="glass rounded-xl p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="size-4 text-electric" />
+              <h3 className="text-sm font-semibold">As Minhas Estatísticas</h3>
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-4 gap-2 text-center">
+              <div>
+                <p className="font-[family-name:var(--font-heading)] text-xl text-green-400">{wins}</p>
+                <p className="text-[10px] text-muted-foreground">Vitórias</p>
+              </div>
+              <div>
+                <p className="font-[family-name:var(--font-heading)] text-xl text-yellow-400">{draws}</p>
+                <p className="text-[10px] text-muted-foreground">Empates</p>
+              </div>
+              <div>
+                <p className="font-[family-name:var(--font-heading)] text-xl text-red-400">{losses}</p>
+                <p className="text-[10px] text-muted-foreground">Derrotas</p>
+              </div>
+              <div>
+                <p className="font-[family-name:var(--font-heading)] text-xl text-electric">{goals}</p>
+                <p className="text-[10px] text-muted-foreground">Golos</p>
+              </div>
+            </div>
+
+            {/* W/D/L bar chart */}
+            {gamesPlayed > 0 ? (
+              <div className="space-y-1.5">
+                <div className="flex h-3 rounded-full overflow-hidden bg-white/5">
+                  {winPct > 0 && (
+                    <div
+                      className="bg-green-500 transition-all"
+                      style={{ width: `${winPct}%` }}
+                    />
+                  )}
+                  {drawPct > 0 && (
+                    <div
+                      className="bg-yellow-500 transition-all"
+                      style={{ width: `${drawPct}%` }}
+                    />
+                  )}
+                  {lossPct > 0 && (
+                    <div
+                      className="bg-red-500 transition-all"
+                      style={{ width: `${lossPct}%` }}
+                    />
+                  )}
+                </div>
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span>{winPct}% vit.</span>
+                  <span>{drawPct}% emp.</span>
+                  <span>{lossPct}% der.</span>
+                </div>
+              </div>
+            ) : (
+              <div className="h-3 rounded-full bg-white/5" />
+            )}
+
+            {/* Goals per game */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-white/5 pt-3">
+              <div className="flex items-center gap-1.5">
+                <Target className="size-3.5" />
+                <span>Golos por jogo</span>
+              </div>
+              <span className="font-medium text-foreground">
+                {gamesPlayed > 0 ? (goals / gamesPlayed).toFixed(1) : "—"}
+              </span>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* --- New Game Button --- */}
       <Link
