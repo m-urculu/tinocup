@@ -35,6 +35,7 @@ export function SignupPanel({
   confirmed,
   teamSize,
   userPhone,
+  isCreator,
 }: {
   gameId: string
   groupSlug: string
@@ -43,6 +44,7 @@ export function SignupPanel({
   confirmed: Signup[]
   teamSize: number
   userPhone: string | null
+  isCreator: boolean
 }) {
   const [loading, setLoading] = useState(false)
   const [showPhoneInput, setShowPhoneInput] = useState(false)
@@ -119,7 +121,7 @@ export function SignupPanel({
         <h3 className="text-sm font-semibold">
           Inscrição ({confirmed.length}/{totalNeeded})
         </h3>
-        {confirmed.length >= totalNeeded && (
+        {confirmed.length >= totalNeeded && isCreator && (
           <Button
             onClick={handleGenerateTeams}
             disabled={loading}
