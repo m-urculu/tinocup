@@ -2,7 +2,7 @@
 
 // @file src/components/game/PaymentPanel.tsx
 // @description Pick-up-the-tab form + payment summary on completed games
-// @depends app/group/[id]/games/[gameId]/actions
+// @depends app/group/[slug]/games/[gameId]/actions
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { CreditCard, Check, Clock, Phone } from "lucide-react"
-import { pickUpTabAction } from "@/app/group/[id]/games/[gameId]/actions"
+import { pickUpTabAction } from "@/app/group/[slug]/games/[gameId]/actions"
 
 // --- Types ---
 
@@ -27,7 +27,7 @@ type PaymentRow = {
 
 export function PaymentPanel({
   gameId,
-  groupId,
+  groupSlug,
   paidBy,
   paidByName,
   paidByPhone,
@@ -37,7 +37,7 @@ export function PaymentPanel({
   currentUserId,
 }: {
   gameId: string
-  groupId: string
+  groupSlug: string
   paidBy: string | null
   paidByName: string | null
   paidByPhone: string | null
@@ -59,7 +59,7 @@ export function PaymentPanel({
     }
 
     setLoading(true)
-    const result = await pickUpTabAction(gameId, groupId, parsed)
+    const result = await pickUpTabAction(gameId, groupSlug, parsed)
     if (result.error) {
       toast.error(result.error)
       setLoading(false)

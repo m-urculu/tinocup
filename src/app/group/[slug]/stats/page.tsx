@@ -1,18 +1,29 @@
-// @file src/app/group/[id]/stats/page.tsx
+// @file src/app/group/[slug]/stats/page.tsx
 // @description Stats page — player selector, radar chart, rating history
 // @depends lib/supabase/server, components/stats/StatsView
 
 import { createClient } from "@/lib/supabase/server"
+import { notFound } from "next/navigation"
 import StatsView from "@/components/stats/StatsView"
 import type { PlayerStats, GroupMax } from "@/components/stats/StatsView"
 
 export default async function StatsPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }) {
-  const { id } = await params
+  const { slug } = await params
   const supabase = await createClient()
+
+  // Resolve slug → UUID
+  const { data: group } = await supabase
+    .from("groups")
+    .select("id")
+    .eq("slug", slug)
+    .single()
+
+  if (!group) notFound()
+  const groupId = group.id
 
   const {
     data: { user },
@@ -22,14 +33,14 @@ export default async function StatsPage({
   const { data: ratings } = await supabase
     .from("player_ratings")
     .select("*, profile:profiles(display_name, avatar_url)")
-    .eq("group_id", id)
+    .eq("group_id", groupId)
     .order("rating", { ascending: false })
 
   // Fetch completed games + teams to build rating history per player
   const { data: completedGames } = await supabase
     .from("games")
     .select("id, date, score_home, score_away")
-    .eq("group_id", id)
+    .eq("group_id", groupId)
     .eq("status", "completed")
     .order("date", { ascending: true })
 

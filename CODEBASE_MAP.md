@@ -10,7 +10,7 @@ tinocup/
 │   │   ├── auth/callback/            # Supabase auth callback
 │   │   ├── group/
 │   │   │   ├── new/                  # Create/join group
-│   │   │   └── [id]/                 # Group pages
+│   │   │   └── [slug]/               # Group pages (slug-based URLs)
 │   │   │       ├── games/
 │   │   │       │   ├── new/          # Create game
 │   │   │       │   └── [gameId]/     # Game detail
@@ -44,17 +44,17 @@ tinocup/
 | `auth/callback/route.ts` | Supabase auth callback handler for OTP verification. |
 | `profile/setup/page.tsx` | First-time profile creation (display name). |
 | `group/new/page.tsx` | Create or join a group via name or invite code. |
-| `group/[id]/layout.tsx` | Group layout — fetches group data, wraps children with header + bottom nav. |
-| `group/[id]/page.tsx` | Group dashboard — quick stats, invite code, upcoming games list. |
-| `group/[id]/games/page.tsx` | All games list with status badges and scores. |
-| `group/[id]/games/new/page.tsx` | Create game form — date, time, field, team size. |
-| `group/[id]/games/new/actions.ts` | Server action for creating a game — auto-sets cost from field price, auto-signs up creator. |
-| `group/[id]/games/[gameId]/page.tsx` | Game detail — signup panel, team display, score entry, goalscorers. Fetches user phone for signup. |
-| `group/[id]/games/[gameId]/actions.ts` | Server actions for game detail — signup, delete, generate teams, submit score with ELO + payments. |
-| `group/[id]/stats/page.tsx` | Stats page — computes group-relative maximums, builds rating history, passes data to StatsView. |
-| `group/[id]/payments/page.tsx` | Payment tracker — per-game cost split, paid/unpaid toggles. |
-| `group/[id]/fields/page.tsx` | Field management — CRUD for fields (name, address, price). |
-| `group/[id]/settings/page.tsx` | Group settings — avatar upload, phone number, members list with avatars, sign out. |
+| `group/[slug]/layout.tsx` | Group layout — fetches group by slug, wraps children with header + bottom nav. |
+| `group/[slug]/page.tsx` | Group dashboard — quick stats, invite code, upcoming games list. |
+| `group/[slug]/games/page.tsx` | All games list with status badges and scores. |
+| `group/[slug]/games/new/page.tsx` | Create game form — date, time, field, team size. |
+| `group/[slug]/games/new/actions.ts` | Server action for creating a game — auto-sets cost from field price, auto-signs up creator. |
+| `group/[slug]/games/[gameId]/page.tsx` | Game detail — signup panel, team display, score entry, goalscorers. Fetches user phone for signup. |
+| `group/[slug]/games/[gameId]/actions.ts` | Server actions for game detail — signup, delete, generate teams, submit score with ELO + payments. |
+| `group/[slug]/stats/page.tsx` | Stats page — computes group-relative maximums, builds rating history, passes data to StatsView. |
+| `group/[slug]/payments/page.tsx` | Payment tracker — per-game cost split, paid/unpaid toggles. |
+| `group/[slug]/fields/page.tsx` | Field management — CRUD for fields (name, address, price). |
+| `group/[slug]/settings/page.tsx` | Group settings — avatar upload, phone number, members list with avatars, sign out. |
 
 ### `src/components/`
 
@@ -100,6 +100,7 @@ tinocup/
 |------|-------------|
 | `001_initial_schema.sql` | Full database schema — 10 tables with RLS policies and indexes. |
 | `002_shadow_rating.sql` | Adds `shadow_rating` column to `player_ratings` for Bayesian team balancing. |
+| `003_group_slug.sql` | Adds `slug` column to `groups` for human-readable URLs. |
 
 ### `scripts/`
 

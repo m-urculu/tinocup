@@ -12,6 +12,19 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { Users, Plus } from "lucide-react"
 
+// --- Helpers ---
+
+function slugify(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip accents
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")    // non-alphanumeric → hyphen
+    .replace(/^-+|-+$/g, "")        // trim leading/trailing hyphens
+}
+
+// --- Component ---
+
 export default function NewGroupForm() {
   const [tab, setTab] = useState<"create" | "join">("create")
   const [groupName, setGroupName] = useState("")
@@ -38,9 +51,12 @@ export default function NewGroupForm() {
     // Generate 6-char invite code
     const code = Math.random().toString(36).substring(2, 8).toUpperCase()
 
+    // Generate slug from group name
+    const slug = slugify(groupName)
+
     const { data: group, error } = await supabase
       .from("groups")
-      .insert({ name: groupName.trim(), invite_code: code, created_by: user.id })
+      .insert({ name: groupName.trim(), slug, invite_code: code, created_by: user.id })
       .select()
       .single()
 
@@ -64,7 +80,7 @@ export default function NewGroupForm() {
     })
 
     setLoading(false)
-    router.push(`/group/${group.id}`)
+    router.push(`/group/${group.slug}`)
   }
 
   async function handleJoin(e: React.FormEvent) {
@@ -103,7 +119,7 @@ export default function NewGroupForm() {
       .single()
 
     if (existing) {
-      router.push(`/group/${group.id}`)
+      router.push(`/group/${group.slug}`)
       return
     }
 
@@ -120,7 +136,7 @@ export default function NewGroupForm() {
     })
 
     setLoading(false)
-    router.push(`/group/${group.id}`)
+    router.push(`/group/${group.slug}`)
   }
 
   return (

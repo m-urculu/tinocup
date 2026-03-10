@@ -1,11 +1,12 @@
 "use client"
 
-// @file src/app/group/[id]/games/new/page.tsx
+// @file src/app/group/[slug]/games/new/page.tsx
 // @description Create a new game — date picker, time selector, field, team size
-// @depends app/group/[id]/games/new/actions, components/ui/calendar, components/ui/popover
+// @depends app/group/[slug]/games/new/actions, components/ui/calendar, components/ui/popover
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Calendar } from "@/components/ui/calendar"
@@ -25,10 +26,12 @@ const TIME_OPTIONS = [
 // --- Component ---
 
 export default function NewGamePage() {
-  const params = useParams<{ id: string }>()
-  const groupId = params.id
+  const params = useParams<{ slug: string }>()
+  const slug = params.slug
   const router = useRouter()
+  const supabase = createClient()
 
+  const [groupId, setGroupId] = useState<string | null>(null)
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [time, setTime] = useState("20:00")
   const [teamSize, setTeamSize] = useState(5)
@@ -37,9 +40,22 @@ export default function NewGamePage() {
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [timeOpen, setTimeOpen] = useState(false)
 
+  // Resolve slug → UUID
+  useEffect(() => {
+    async function resolveGroup() {
+      const { data } = await supabase
+        .from("groups")
+        .select("id")
+        .eq("slug", slug)
+        .single()
+      if (data) setGroupId(data.id)
+    }
+    resolveGroup()
+  }, [slug, supabase])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!date) return
+    if (!date || !groupId) return
 
     setLoading(true)
 
@@ -57,7 +73,7 @@ export default function NewGamePage() {
     }
 
     toast.success("Jogo criado!")
-    router.push(`/group/${groupId}/games/${result.gameId}`)
+    router.push(`/group/${slug}/games/${result.gameId}`)
   }
 
   return (
@@ -169,7 +185,7 @@ export default function NewGamePage() {
 
         <Button
           type="submit"
-          disabled={loading || !date}
+          disabled={loading || !date || !groupId}
           className="w-full h-12 gradient-gold text-black font-bold text-base hover:opacity-90 transition-opacity"
         >
           {loading ? "A criar..." : "Criar Jogo"}

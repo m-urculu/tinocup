@@ -8,11 +8,11 @@ import { useEffect, useRef } from "react"
 import { BottomNav } from "./BottomNav"
 
 export function GroupLayout({
-  groupId,
+  groupSlug,
   groupName,
   children,
 }: {
-  groupId: string
+  groupSlug: string
   groupName: string
   children: React.ReactNode
 }) {
@@ -59,7 +59,7 @@ export function GroupLayout({
       </main>
 
       {/* --- Bottom Nav --- */}
-      <BottomNav groupId={groupId} />
+      <BottomNav groupSlug={groupSlug} />
     </div>
   )
 }

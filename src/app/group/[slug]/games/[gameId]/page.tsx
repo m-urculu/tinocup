@@ -1,4 +1,4 @@
-// @file src/app/group/[id]/games/[gameId]/page.tsx
+// @file src/app/group/[slug]/games/[gameId]/page.tsx
 // @description Game detail — signup, team display, score entry, goalscorers, payments
 // @depends lib/supabase/server, components/game/*
 
@@ -13,9 +13,9 @@ import { DeleteGameButton } from "@/components/game/DeleteGameButton"
 export default async function GameDetailPage({
   params,
 }: {
-  params: Promise<{ id: string; gameId: string }>
+  params: Promise<{ slug: string; gameId: string }>
 }) {
-  const { id: groupId, gameId } = await params
+  const { slug, gameId } = await params
   const supabase = await createClient()
 
   const {
@@ -151,7 +151,7 @@ export default async function GameDetailPage({
       {(game.status === "upcoming" || game.status === "teams_set") && (
         <SignupPanel
           gameId={gameId}
-          groupId={groupId}
+          groupSlug={slug}
           userId={user?.id ?? ""}
           userSignup={userSignup ?? null}
           confirmed={confirmed}
@@ -176,7 +176,7 @@ export default async function GameDetailPage({
         (game.status === "teams_set" || game.status === "in_progress") && (
           <ScorePanel
             gameId={gameId}
-            groupId={groupId}
+            groupSlug={slug}
             homeTeam={homeTeam}
             awayTeam={awayTeam}
           />
@@ -186,7 +186,7 @@ export default async function GameDetailPage({
       {game.status === "completed" && totalPlayers > 0 && !game.paid_by && (
         <PaymentPanel
           gameId={gameId}
-          groupId={groupId}
+          groupSlug={slug}
           paidBy={game.paid_by}
           paidByName={paidByName}
           paidByPhone={paidByPhone}
@@ -222,7 +222,7 @@ export default async function GameDetailPage({
 
       {/* --- Delete Game (creator only) --- */}
       {isCreator && (
-        <DeleteGameButton gameId={gameId} groupId={groupId} />
+        <DeleteGameButton gameId={gameId} groupSlug={slug} />
       )}
     </div>
   )

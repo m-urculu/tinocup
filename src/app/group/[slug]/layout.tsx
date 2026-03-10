@@ -1,5 +1,5 @@
-// @file src/app/group/[id]/layout.tsx
-// @description Group layout — fetches group data, wraps children with nav
+// @file src/app/group/[slug]/layout.tsx
+// @description Group layout — fetches group by slug, wraps children with nav
 // @depends lib/supabase/server, components/layout/GroupLayout
 
 import { notFound } from "next/navigation"
@@ -11,21 +11,21 @@ export default async function Layout({
   params,
 }: {
   children: React.ReactNode
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }) {
-  const { id } = await params
+  const { slug } = await params
   const supabase = await createClient()
 
   const { data: group } = await supabase
     .from("groups")
     .select("*")
-    .eq("id", id)
+    .eq("slug", slug)
     .single()
 
   if (!group) notFound()
 
   return (
-    <GroupLayout groupId={group.id} groupName={group.name}>
+    <GroupLayout groupSlug={slug} groupName={group.name}>
       {children}
     </GroupLayout>
   )

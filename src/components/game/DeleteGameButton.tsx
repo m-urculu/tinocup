@@ -2,21 +2,21 @@
 
 // @file src/components/game/DeleteGameButton.tsx
 // @description Button to delete a game — only shown to the game creator
-// @depends app/group/[id]/games/[gameId]/actions
+// @depends app/group/[slug]/games/[gameId]/actions
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Trash2 } from "lucide-react"
-import { deleteGame } from "@/app/group/[id]/games/[gameId]/actions"
+import { deleteGame } from "@/app/group/[slug]/games/[gameId]/actions"
 
 export function DeleteGameButton({
   gameId,
-  groupId,
+  groupSlug,
 }: {
   gameId: string
-  groupId: string
+  groupSlug: string
 }) {
   const [confirming, setConfirming] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -24,7 +24,7 @@ export function DeleteGameButton({
 
   async function handleDelete() {
     setLoading(true)
-    const result = await deleteGame(gameId, groupId)
+    const result = await deleteGame(gameId, groupSlug)
 
     if (result.error) {
       toast.error(result.error)
@@ -34,7 +34,7 @@ export function DeleteGameButton({
     }
 
     toast.success("Jogo eliminado")
-    router.push(`/group/${groupId}/games`)
+    router.push(`/group/${groupSlug}/games`)
   }
 
   if (confirming) {

@@ -1,8 +1,9 @@
-// @file src/app/group/[id]/games/page.tsx
+// @file src/app/group/[slug]/games/page.tsx
 // @description All games list — upcoming and past with status badges
 // @depends lib/supabase/server
 
 import { createClient } from "@/lib/supabase/server"
+import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Plus } from "lucide-react"
 
@@ -25,15 +26,25 @@ const statusLabels: Record<string, string> = {
 export default async function GamesListPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }) {
-  const { id } = await params
+  const { slug } = await params
   const supabase = await createClient()
+
+  // Resolve slug → UUID
+  const { data: group } = await supabase
+    .from("groups")
+    .select("id")
+    .eq("slug", slug)
+    .single()
+
+  if (!group) notFound()
+  const groupId = group.id
 
   const { data: games } = await supabase
     .from("games")
     .select("*")
-    .eq("group_id", id)
+    .eq("group_id", groupId)
     .order("date", { ascending: false })
 
   // Fetch field names separately (avoids RLS issues on joins)
@@ -60,7 +71,7 @@ export default async function GamesListPage({
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Jogos</h2>
         <Link
-          href={`/group/${id}/games/new`}
+          href={`/group/${slug}/games/new`}
           className="flex items-center gap-1 rounded-lg gradient-gold px-3 py-1.5 text-base font-bold text-black hover:opacity-90 transition-opacity"
         >
           <Plus className="size-4" />
@@ -77,7 +88,7 @@ export default async function GamesListPage({
           {games.map((game) => (
             <Link
               key={game.id}
-              href={`/group/${id}/games/${game.id}`}
+              href={`/group/${slug}/games/${game.id}`}
               className="glass rounded-xl p-4 block hover:bg-white/[0.08] transition-colors"
             >
               <div className="flex items-center justify-between">

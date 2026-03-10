@@ -2,7 +2,7 @@
 
 // @file src/components/game/SignupPanel.tsx
 // @description Game signup panel — confirm/decline attendance, phone prompt, generate teams
-// @depends app/group/[id]/games/[gameId]/actions
+// @depends app/group/[slug]/games/[gameId]/actions
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -14,7 +14,7 @@ import {
   signupForGame,
   generateTeamsAction,
   updatePhoneAndSignup,
-} from "@/app/group/[id]/games/[gameId]/actions"
+} from "@/app/group/[slug]/games/[gameId]/actions"
 
 // --- Types ---
 
@@ -29,7 +29,7 @@ type Signup = {
 
 export function SignupPanel({
   gameId,
-  groupId,
+  groupSlug,
   userId,
   userSignup,
   confirmed,
@@ -37,7 +37,7 @@ export function SignupPanel({
   userPhone,
 }: {
   gameId: string
-  groupId: string
+  groupSlug: string
   userId: string
   userSignup: Signup | null
   confirmed: Signup[]
@@ -64,7 +64,7 @@ export function SignupPanel({
     }
 
     setLoading(true)
-    const result = await signupForGame(gameId, groupId, status)
+    const result = await signupForGame(gameId, groupSlug, status)
 
     if (result.error) {
       toast.error(result.error)
@@ -84,7 +84,7 @@ export function SignupPanel({
     }
 
     setLoading(true)
-    const result = await updatePhoneAndSignup(gameId, groupId, phone.trim())
+    const result = await updatePhoneAndSignup(gameId, groupSlug, phone.trim())
 
     if (result.error) {
       toast.error(result.error)
@@ -100,7 +100,7 @@ export function SignupPanel({
 
   async function handleGenerateTeams() {
     setLoading(true)
-    const result = await generateTeamsAction(gameId, groupId)
+    const result = await generateTeamsAction(gameId, groupSlug)
 
     if (result.error) {
       toast.error(result.error)

@@ -5,7 +5,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { LoginForm } from "@/components/LoginForm"
-import { DEFAULT_GROUP_ID } from "@/lib/constants"
+import { DEFAULT_GROUP_SLUG } from "@/lib/constants"
 
 export default async function LandingPage() {
   const supabase = await createClient()
@@ -39,7 +39,7 @@ export default async function LandingPage() {
       }
     }
 
-    redirect(`/group/${DEFAULT_GROUP_ID}`)
+    redirect(`/group/${DEFAULT_GROUP_SLUG}`)
   }
 
   return (

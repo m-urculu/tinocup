@@ -1,6 +1,6 @@
 "use client"
 
-// @file src/app/group/[id]/settings/page.tsx
+// @file src/app/group/[slug]/settings/page.tsx
 // @description Group settings — avatar upload, phone number, members list, sign out
 // @depends lib/supabase/client
 
@@ -25,12 +25,13 @@ type MemberRow = {
 // --- Component ---
 
 export default function SettingsPage() {
-  const params = useParams<{ id: string }>()
-  const groupId = params.id
+  const params = useParams<{ slug: string }>()
+  const slug = params.slug
   const router = useRouter()
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [groupId, setGroupId] = useState<string | null>(null)
   const [members, setMembers] = useState<MemberRow[]>([])
   const [phone, setPhone] = useState("")
   const [savedPhone, setSavedPhone] = useState("")
@@ -44,11 +45,22 @@ export default function SettingsPage() {
 
   useEffect(() => {
     async function load() {
+      // Resolve slug → UUID
+      const { data: group } = await supabase
+        .from("groups")
+        .select("id")
+        .eq("slug", slug)
+        .single()
+
+      if (!group) return
+      const gid = group.id
+      setGroupId(gid)
+
       // Load members
       const { data: m } = await supabase
         .from("group_members")
         .select("*, profile:profiles(display_name, phone, avatar_url)")
-        .eq("group_id", groupId)
+        .eq("group_id", gid)
         .order("joined_at")
       if (m) setMembers(m as MemberRow[])
 
@@ -75,7 +87,7 @@ export default function SettingsPage() {
       }
     }
     load()
-  }, [groupId, supabase])
+  }, [slug, supabase])
 
   // --- Handlers ---
 

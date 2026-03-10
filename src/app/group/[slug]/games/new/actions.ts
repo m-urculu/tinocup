@@ -1,6 +1,6 @@
 "use server"
 
-// @file src/app/group/[id]/games/new/actions.ts
+// @file src/app/group/[slug]/games/new/actions.ts
 // @description Server action for creating a game + auto-signup creator
 // @depends lib/supabase/server
 

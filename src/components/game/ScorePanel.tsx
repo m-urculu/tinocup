@@ -2,14 +2,14 @@
 
 // @file src/components/game/ScorePanel.tsx
 // @description Score recording panel — validates goalscorer totals match team scores
-// @depends app/group/[id]/games/[gameId]/actions
+// @depends app/group/[slug]/games/[gameId]/actions
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
-import { submitScoreAction } from "@/app/group/[id]/games/[gameId]/actions"
+import { submitScoreAction } from "@/app/group/[slug]/games/[gameId]/actions"
 
 // --- Types ---
 
@@ -24,12 +24,12 @@ type TeamMember = {
 
 export function ScorePanel({
   gameId,
-  groupId,
+  groupSlug,
   homeTeam,
   awayTeam,
 }: {
   gameId: string
-  groupId: string
+  groupSlug: string
   homeTeam: TeamMember[]
   awayTeam: TeamMember[]
 }) {
@@ -62,7 +62,7 @@ export function ScorePanel({
     }
 
     setLoading(true)
-    const result = await submitScoreAction(gameId, groupId, scoreHome, scoreAway, goals)
+    const result = await submitScoreAction(gameId, groupSlug, scoreHome, scoreAway, goals)
 
     if (result.error) {
       toast.error(result.error)

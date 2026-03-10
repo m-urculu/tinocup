@@ -17,9 +17,9 @@ const navItems = [
   { label: "Config.", icon: Settings, path: "/settings" },
 ]
 
-export function BottomNav({ groupId }: { groupId: string }) {
+export function BottomNav({ groupSlug }: { groupSlug: string }) {
   const pathname = usePathname()
-  const basePath = `/group/${groupId}`
+  const basePath = `/group/${groupSlug}`
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0d1225] border-t border-white/10">

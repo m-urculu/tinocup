@@ -1,17 +1,28 @@
-// @file src/app/group/[id]/payments/page.tsx
+// @file src/app/group/[slug]/payments/page.tsx
 // @description Payment tracker — per-game cost split, paid/unpaid status, MB Way
 // @depends lib/supabase/server, components/payment/PaymentList
 
 import { createClient } from "@/lib/supabase/server"
+import { notFound } from "next/navigation"
 import { PaymentList } from "@/components/payment/PaymentList"
 
 export default async function PaymentsPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }) {
-  const { id } = await params
+  const { slug } = await params
   const supabase = await createClient()
+
+  // Resolve slug → UUID
+  const { data: group } = await supabase
+    .from("groups")
+    .select("id")
+    .eq("slug", slug)
+    .single()
+
+  if (!group) notFound()
+  const groupId = group.id
 
   const {
     data: { user },
@@ -21,7 +32,7 @@ export default async function PaymentsPage({
   const { data: games } = await supabase
     .from("games")
     .select("id, paid_by")
-    .eq("group_id", id)
+    .eq("group_id", groupId)
 
   const gameIds = games?.map((g) => g.id) ?? []
 

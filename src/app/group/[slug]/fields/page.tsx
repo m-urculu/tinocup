@@ -1,6 +1,6 @@
 "use client"
 
-// @file src/app/group/[id]/fields/page.tsx
+// @file src/app/group/[slug]/fields/page.tsx
 // @description Field management — add/edit fields (name, address, price)
 // @depends lib/supabase/client
 
@@ -14,11 +14,12 @@ import { Plus, MapPin, Pencil, Trash2 } from "lucide-react"
 import type { Field } from "@/types"
 
 export default function FieldsPage() {
-  const params = useParams<{ id: string }>()
-  const groupId = params.id
+  const params = useParams<{ slug: string }>()
+  const slug = params.slug
   const router = useRouter()
   const supabase = createClient()
 
+  const [groupId, setGroupId] = useState<string | null>(null)
   const [fields, setFields] = useState<Field[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
@@ -28,14 +29,28 @@ export default function FieldsPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    loadFields()
-  }, [groupId])
+    async function init() {
+      // Resolve slug → UUID
+      const { data: group } = await supabase
+        .from("groups")
+        .select("id")
+        .eq("slug", slug)
+        .single()
 
-  async function loadFields() {
+      if (!group) return
+      setGroupId(group.id)
+      loadFields(group.id)
+    }
+    init()
+  }, [slug, supabase])
+
+  async function loadFields(gid?: string) {
+    const id = gid ?? groupId
+    if (!id) return
     const { data } = await supabase
       .from("fields")
       .select("*")
-      .eq("group_id", groupId)
+      .eq("group_id", id)
       .order("name")
     if (data) setFields(data)
   }
@@ -58,7 +73,7 @@ export default function FieldsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim() || !price) return
+    if (!name.trim() || !price || !groupId) return
 
     setLoading(true)
 

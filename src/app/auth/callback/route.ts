@@ -4,7 +4,7 @@
 
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { DEFAULT_GROUP_ID } from "@/lib/constants"
+import { DEFAULT_GROUP_SLUG } from "@/lib/constants"
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
       if (user) {
         await ensureProfileAndGroup(supabase, user)
-        return NextResponse.redirect(`${origin}/group/${DEFAULT_GROUP_ID}`)
+        return NextResponse.redirect(`${origin}/group/${DEFAULT_GROUP_SLUG}`)
       }
     }
   }
@@ -31,6 +31,17 @@ export async function GET(request: Request) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function ensureProfileAndGroup(supabase: any, user: any) {
+  // Resolve default group UUID from slug
+  const { data: defaultGroup } = await supabase
+    .from("groups")
+    .select("id")
+    .eq("slug", DEFAULT_GROUP_SLUG)
+    .single()
+
+  if (!defaultGroup) return
+
+  const groupId = defaultGroup.id
+
   // Auto-create profile if missing
   const { data: profile } = await supabase
     .from("profiles")
@@ -54,20 +65,20 @@ async function ensureProfileAndGroup(supabase: any, user: any) {
   const { data: membership } = await supabase
     .from("group_members")
     .select("id")
-    .eq("group_id", DEFAULT_GROUP_ID)
+    .eq("group_id", groupId)
     .eq("user_id", user.id)
     .single()
 
   if (!membership) {
     await supabase.from("group_members").insert({
-      group_id: DEFAULT_GROUP_ID,
+      group_id: groupId,
       user_id: user.id,
       role: "member",
     })
 
     await supabase.from("player_ratings").insert({
       user_id: user.id,
-      group_id: DEFAULT_GROUP_ID,
+      group_id: groupId,
     })
   }
 }

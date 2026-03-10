@@ -1,8 +1,9 @@
-// @file src/app/group/[id]/page.tsx
+// @file src/app/group/[slug]/page.tsx
 // @description Group dashboard — user profile card, quick stats, upcoming games
 // @depends lib/supabase/server
 
 import { createClient } from "@/lib/supabase/server"
+import { notFound } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Calendar, Users, Trophy, Plus } from "lucide-react"
@@ -10,10 +11,20 @@ import { Calendar, Users, Trophy, Plus } from "lucide-react"
 export default async function GroupDashboardPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }) {
-  const { id } = await params
+  const { slug } = await params
   const supabase = await createClient()
+
+  // Resolve slug → UUID
+  const { data: group } = await supabase
+    .from("groups")
+    .select("id")
+    .eq("slug", slug)
+    .single()
+
+  if (!group) notFound()
+  const groupId = group.id
 
   const {
     data: { user },
@@ -30,7 +41,7 @@ export default async function GroupDashboardPage({
   const { data: upcomingGames } = await supabase
     .from("games")
     .select("*")
-    .eq("group_id", id)
+    .eq("group_id", groupId)
     .in("status", ["upcoming", "teams_set"])
     .order("date", { ascending: true })
     .limit(3)
@@ -58,13 +69,13 @@ export default async function GroupDashboardPage({
   const { count: memberCount } = await supabase
     .from("group_members")
     .select("*", { count: "exact", head: true })
-    .eq("group_id", id)
+    .eq("group_id", groupId)
 
   // Fetch user's rating in this group
   const { data: myRating } = await supabase
     .from("player_ratings")
     .select("*")
-    .eq("group_id", id)
+    .eq("group_id", groupId)
     .eq("user_id", user?.id ?? "")
     .single()
 
@@ -153,7 +164,7 @@ export default async function GroupDashboardPage({
 
       {/* --- New Game Button --- */}
       <Link
-        href={`/group/${id}/games/new`}
+        href={`/group/${slug}/games/new`}
         className="flex items-center justify-center gap-2 w-full h-12 rounded-xl gradient-gold text-black font-bold text-base hover:opacity-90 transition-opacity"
       >
         <Plus className="size-5" />
@@ -167,7 +178,7 @@ export default async function GroupDashboardPage({
             Próximos Jogos
           </h2>
           <Link
-            href={`/group/${id}/games`}
+            href={`/group/${slug}/games`}
             className="text-sm text-electric hover:underline"
           >
             Ver todos
@@ -181,7 +192,7 @@ export default async function GroupDashboardPage({
               Sem jogos agendados
             </p>
             <Link
-              href={`/group/${id}/games/new`}
+              href={`/group/${slug}/games/new`}
               className="mt-3 inline-block text-base font-medium text-gold hover:underline"
             >
               Agendar um →
@@ -192,7 +203,7 @@ export default async function GroupDashboardPage({
             {upcomingGames.map((game) => (
               <Link
                 key={game.id}
-                href={`/group/${id}/games/${game.id}`}
+                href={`/group/${slug}/games/${game.id}`}
                 className="glass rounded-xl p-4 block hover:bg-white/[0.08] transition-colors"
               >
                 <div className="flex items-center justify-between">

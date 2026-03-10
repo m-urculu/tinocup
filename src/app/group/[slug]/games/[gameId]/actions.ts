@@ -1,6 +1,6 @@
 "use server"
 
-// @file src/app/group/[id]/games/[gameId]/actions.ts
+// @file src/app/group/[slug]/games/[gameId]/actions.ts
 // @description Server actions for game detail — signup, delete, teams, score
 // @depends lib/supabase/server, lib/rating
 
@@ -15,7 +15,7 @@ import {
 
 export async function signupForGame(
   gameId: string,
-  groupId: string,
+  groupSlug: string,
   status: "confirmed" | "declined"
 ) {
   const supabase = await createClient()
@@ -59,11 +59,11 @@ export async function signupForGame(
 
   if (error) return { error: error.message }
 
-  revalidatePath(`/group/${groupId}/games/${gameId}`)
+  revalidatePath(`/group/${groupSlug}/games/${gameId}`)
   return { error: null }
 }
 
-export async function deleteGame(gameId: string, groupId: string) {
+export async function deleteGame(gameId: string, groupSlug: string) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -86,13 +86,13 @@ export async function deleteGame(gameId: string, groupId: string) {
 
   if (error) return { error: error.message }
 
-  revalidatePath(`/group/${groupId}/games`)
+  revalidatePath(`/group/${groupSlug}/games`)
   return { error: null }
 }
 
 // --- Generate Teams ---
 
-export async function generateTeamsAction(gameId: string, groupId: string) {
+export async function generateTeamsAction(gameId: string, groupSlug: string) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -100,15 +100,16 @@ export async function generateTeamsAction(gameId: string, groupId: string) {
 
   if (!user) return { error: "Não autenticado" }
 
-  // Fetch game to get team_size
+  // Fetch game to get team_size and group_id
   const { data: game } = await supabase
     .from("games")
-    .select("team_size")
+    .select("team_size, group_id")
     .eq("id", gameId)
     .single()
 
   if (!game) return { error: "Jogo não encontrado" }
 
+  const groupId = game.group_id
   const totalNeeded = game.team_size * 2
 
   // Fetch confirmed signups
@@ -169,7 +170,7 @@ export async function generateTeamsAction(gameId: string, groupId: string) {
     .update({ status: "teams_set" })
     .eq("id", gameId)
 
-  revalidatePath(`/group/${groupId}/games/${gameId}`)
+  revalidatePath(`/group/${groupSlug}/games/${gameId}`)
   return { error: null }
 }
 
@@ -177,7 +178,7 @@ export async function generateTeamsAction(gameId: string, groupId: string) {
 
 export async function submitScoreAction(
   gameId: string,
-  groupId: string,
+  groupSlug: string,
   scoreHome: number,
   scoreAway: number,
   goals: Record<string, number>
@@ -188,6 +189,16 @@ export async function submitScoreAction(
   } = await supabase.auth.getUser()
 
   if (!user) return { error: "Não autenticado" }
+
+  // Fetch group_id from game
+  const { data: gameRow } = await supabase
+    .from("games")
+    .select("group_id")
+    .eq("id", gameId)
+    .single()
+
+  if (!gameRow) return { error: "Jogo não encontrado" }
+  const groupId = gameRow.group_id
 
   // Update game score + status
   const { error: scoreError } = await supabase
@@ -293,7 +304,7 @@ export async function submitScoreAction(
     }
   }
 
-  revalidatePath(`/group/${groupId}/games/${gameId}`)
+  revalidatePath(`/group/${groupSlug}/games/${gameId}`)
   return { error: null }
 }
 
@@ -301,7 +312,7 @@ export async function submitScoreAction(
 
 export async function pickUpTabAction(
   gameId: string,
-  groupId: string,
+  groupSlug: string,
   totalAmount: number
 ) {
   const supabase = await createClient()
@@ -366,8 +377,8 @@ export async function pickUpTabAction(
   ]
   await supabase.from("payments").insert(paymentInserts)
 
-  revalidatePath(`/group/${groupId}/games/${gameId}`)
-  revalidatePath(`/group/${groupId}/payments`)
+  revalidatePath(`/group/${groupSlug}/games/${gameId}`)
+  revalidatePath(`/group/${groupSlug}/payments`)
   return { error: null }
 }
 
@@ -375,7 +386,7 @@ export async function pickUpTabAction(
 
 export async function updatePhoneAndSignup(
   gameId: string,
-  groupId: string,
+  groupSlug: string,
   phone: string
 ) {
   const supabase = await createClient()
@@ -405,6 +416,6 @@ export async function updatePhoneAndSignup(
 
   if (error) return { error: error.message }
 
-  revalidatePath(`/group/${groupId}/games/${gameId}`)
+  revalidatePath(`/group/${groupSlug}/games/${gameId}`)
   return { error: null }
 }
