@@ -107,7 +107,7 @@ export default function FieldsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Campos</h2>
+        <h2 className="text-xl font-semibold">Campos</h2>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}

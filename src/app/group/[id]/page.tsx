@@ -98,26 +98,26 @@ export default async function GroupDashboardPage({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-base truncate">{displayName}</p>
+            <p className="font-semibold text-lg truncate">{displayName}</p>
             <div className="flex items-center gap-2 mt-0.5">
-              <Trophy className="size-3.5 text-gold" />
-              <span className="font-[family-name:var(--font-heading)] text-lg text-gold">
+              <Trophy className="size-4 text-gold" />
+              <span className="font-[family-name:var(--font-heading)] text-xl text-gold">
                 {myRating?.rating ?? 1000}
               </span>
             </div>
           </div>
-          <div className="flex gap-3 text-xs text-center">
+          <div className="flex gap-3 text-sm text-center">
             <div>
               <p className="font-bold text-green-400">{myRating?.wins ?? 0}</p>
-              <p className="text-[9px] text-muted-foreground">V</p>
+              <p className="text-[11px] text-muted-foreground">V</p>
             </div>
             <div>
               <p className="font-bold text-yellow-400">{myRating?.draws ?? 0}</p>
-              <p className="text-[9px] text-muted-foreground">E</p>
+              <p className="text-[11px] text-muted-foreground">E</p>
             </div>
             <div>
               <p className="font-bold text-red-400">{myRating?.losses ?? 0}</p>
-              <p className="text-[9px] text-muted-foreground">D</p>
+              <p className="text-[11px] text-muted-foreground">D</p>
             </div>
           </div>
         </div>
@@ -127,27 +127,27 @@ export default async function GroupDashboardPage({
       <div className="grid grid-cols-3 gap-3">
         <div className="glass rounded-xl p-3 text-center">
           <Users className="mx-auto mb-1 size-5 text-electric" />
-          <p className="font-[family-name:var(--font-heading)] text-2xl text-foreground">
+          <p className="font-[family-name:var(--font-heading)] text-3xl text-foreground">
             {memberCount ?? 0}
           </p>
-          <p className="text-[10px] text-muted-foreground">Jogadores</p>
+          <p className="text-xs text-muted-foreground">Jogadores</p>
         </div>
         <div className="glass rounded-xl p-3 text-center">
           <Calendar className="mx-auto mb-1 size-5 text-electric" />
-          <p className="font-[family-name:var(--font-heading)] text-2xl text-foreground">
+          <p className="font-[family-name:var(--font-heading)] text-3xl text-foreground">
             {myRating?.games_played ?? 0}
           </p>
-          <p className="text-[10px] text-muted-foreground">Jogos</p>
+          <p className="text-xs text-muted-foreground">Jogos</p>
         </div>
         <div className="glass rounded-xl p-3 text-center">
           <svg className="mx-auto mb-1 size-5 text-electric" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <circle cx="12" cy="12" r="10" />
             <path d="M12 2 L14.5 8 L12 6.5 L9.5 8 Z M2 12 L8 9.5 L6.5 12 L8 14.5 Z M22 12 L16 14.5 L17.5 12 L16 9.5 Z M12 22 L9.5 16 L12 17.5 L14.5 16 Z" />
           </svg>
-          <p className="font-[family-name:var(--font-heading)] text-2xl text-foreground">
+          <p className="font-[family-name:var(--font-heading)] text-3xl text-foreground">
             {myRating?.goals ?? 0}
           </p>
-          <p className="text-[10px] text-muted-foreground">Golos</p>
+          <p className="text-xs text-muted-foreground">Golos</p>
         </div>
       </div>
 
@@ -163,12 +163,12 @@ export default async function GroupDashboardPage({
       {/* --- Upcoming Games --- */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-foreground">
+          <h2 className="text-base font-semibold text-foreground">
             Próximos Jogos
           </h2>
           <Link
             href={`/group/${id}/games`}
-            className="text-xs text-electric hover:underline"
+            className="text-sm text-electric hover:underline"
           >
             Ver todos
           </Link>
@@ -177,12 +177,12 @@ export default async function GroupDashboardPage({
         {!upcomingGames || upcomingGames.length === 0 ? (
           <div className="glass rounded-xl p-8 text-center">
             <Gamepad2Icon />
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-base text-muted-foreground">
               Sem jogos agendados
             </p>
             <Link
               href={`/group/${id}/games/new`}
-              className="mt-3 inline-block text-sm font-medium text-gold hover:underline"
+              className="mt-3 inline-block text-base font-medium text-gold hover:underline"
             >
               Agendar um →
             </Link>
@@ -197,7 +197,7 @@ export default async function GroupDashboardPage({
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">
+                    <p className="text-base font-medium">
                       {new Date(game.date).toLocaleDateString("pt-PT", {
                         weekday: "short",
                         month: "short",
@@ -207,13 +207,13 @@ export default async function GroupDashboardPage({
                       {game.time}
                     </p>
                     {game.field_id && fieldMap[game.field_id] && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-sm text-muted-foreground mt-0.5">
                         {fieldMap[game.field_id]}
                       </p>
                     )}
                   </div>
                   <div className="text-right">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-gold/20 text-gold font-medium">
+                    <span className="text-sm px-2 py-0.5 rounded-full bg-gold/20 text-gold font-medium">
                       {game.team_size}v{game.team_size}
                     </span>
                   </div>

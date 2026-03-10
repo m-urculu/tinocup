@@ -221,13 +221,13 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Definições</h2>
+      <h2 className="text-xl font-semibold">Definições</h2>
 
       {/* --- Avatar --- */}
       <div className="glass rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <Camera className="size-4 text-electric" />
-          <h3 className="text-sm font-semibold">Foto de Perfil</h3>
+          <h3 className="text-base font-semibold">Foto de Perfil</h3>
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -257,9 +257,9 @@ export default function SettingsPage() {
               </div>
             )}
           </button>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-base text-muted-foreground">
             <p>Toca para mudar a foto</p>
-            <p className="text-xs mt-1">JPG, PNG ou WebP, máx 2MB</p>
+            <p className="text-sm mt-1">JPG, PNG ou WebP, máx 2MB</p>
           </div>
         </div>
         <input
@@ -275,7 +275,7 @@ export default function SettingsPage() {
       <div className="glass rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <User className="size-4 text-electric" />
-          <h3 className="text-sm font-semibold">Nome</h3>
+          <h3 className="text-base font-semibold">Nome</h3>
         </div>
         <div className="flex gap-2">
           <Input
@@ -299,9 +299,9 @@ export default function SettingsPage() {
       <div className="glass rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <Phone className="size-4 text-electric" />
-          <h3 className="text-sm font-semibold">Número de Telefone</h3>
+          <h3 className="text-base font-semibold">Número de Telefone</h3>
         </div>
-        <p className="text-xs text-muted-foreground mb-3">
+        <p className="text-sm text-muted-foreground mb-3">
           Usado para pagamentos MB Way. Os outros membros vão ver este número quando te devem dinheiro.
         </p>
         <div className="flex gap-2">
@@ -326,7 +326,7 @@ export default function SettingsPage() {
       <div className="glass rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <Users className="size-4 text-electric" />
-          <h3 className="text-sm font-semibold">
+          <h3 className="text-base font-semibold">
             Membros ({members.length})
           </h3>
         </div>
@@ -334,7 +334,7 @@ export default function SettingsPage() {
           {members.map((m) => (
             <div
               key={m.id}
-              className="flex items-center justify-between text-sm py-1.5"
+              className="flex items-center justify-between text-base py-1.5"
             >
               <div className="flex items-center gap-2">
                 <div className="relative size-7 rounded-full overflow-hidden shrink-0">
@@ -347,7 +347,7 @@ export default function SettingsPage() {
                       unoptimized
                     />
                   ) : (
-                    <div className="w-full h-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                    <div className="w-full h-full bg-white/10 flex items-center justify-center text-xs font-bold text-muted-foreground">
                       {m.profile?.display_name
                         ? getInitials(m.profile.display_name)
                         : "?"}

@@ -58,10 +58,10 @@ export default async function GamesListPage({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Jogos</h2>
+        <h2 className="text-xl font-semibold">Jogos</h2>
         <Link
           href={`/group/${id}/games/new`}
-          className="flex items-center gap-1 rounded-lg gradient-gold px-3 py-1.5 text-sm font-bold text-black hover:opacity-90 transition-opacity"
+          className="flex items-center gap-1 rounded-lg gradient-gold px-3 py-1.5 text-base font-bold text-black hover:opacity-90 transition-opacity"
         >
           <Plus className="size-4" />
           Novo
@@ -82,7 +82,7 @@ export default async function GamesListPage({
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">
+                  <p className="text-base font-medium">
                     {new Date(game.date).toLocaleDateString("pt-PT", {
                       weekday: "short",
                       month: "short",
@@ -92,7 +92,7 @@ export default async function GamesListPage({
                     {game.time}
                   </p>
                   {game.field_id && fieldMap[game.field_id] && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                       {fieldMap[game.field_id]}
                     </p>
                   )}
@@ -101,12 +101,12 @@ export default async function GamesListPage({
                   {game.status === "completed" &&
                     game.score_home !== null &&
                     game.score_away !== null && (
-                      <span className="font-[family-name:var(--font-heading)] text-xl text-foreground">
+                      <span className="font-[family-name:var(--font-heading)] text-2xl text-foreground">
                         {game.score_home} - {game.score_away}
                       </span>
                     )}
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       statusColors[game.status] ?? ""
                     }`}
                   >

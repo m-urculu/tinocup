@@ -179,7 +179,7 @@ export default function StatsRadar({
           textAnchor="middle"
           dominantBaseline="middle"
           className="fill-foreground"
-          style={{ fontSize: "28px", fontWeight: 800, fontFamily: "var(--font-heading)" }}
+          style={{ fontSize: "34px", fontWeight: 800, fontFamily: "var(--font-heading)" }}
         >
           {gamesPlayed > 0 ? overall : "—"}
         </text>
@@ -188,14 +188,14 @@ export default function StatsRadar({
           textAnchor="middle"
           dominantBaseline="middle"
           className="fill-muted-foreground"
-          style={{ fontSize: "7px", letterSpacing: "0.15em" }}
+          style={{ fontSize: "9px", letterSpacing: "0.15em" }}
         >
           OVERALL
         </text>
 
         {/* Axis labels + values */}
         {AXES.map((axis, i) => {
-          const p = getPoint(i, MAX_R + 24)
+          const p = getPoint(i, MAX_R + 28)
           return (
             <g key={axis.key}>
               <text
@@ -203,7 +203,7 @@ export default function StatsRadar({
                 textAnchor="middle"
                 dominantBaseline="middle"
                 className="fill-muted-foreground"
-                style={{ fontSize: "7px", letterSpacing: "0.08em" }}
+                style={{ fontSize: "9px", letterSpacing: "0.08em" }}
               >
                 {axis.label}
               </text>
@@ -212,7 +212,7 @@ export default function StatsRadar({
                 textAnchor="middle"
                 dominantBaseline="middle"
                 className="fill-foreground"
-                style={{ fontSize: "10px", fontWeight: 700, fontFamily: "var(--font-heading)" }}
+                style={{ fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-heading)" }}
               >
                 {gamesPlayed > 0 ? displayLabels[i] : "—"}
               </text>
@@ -225,13 +225,13 @@ export default function StatsRadar({
       <div className="grid grid-cols-5 gap-1 w-full text-center px-2">
         {AXES.map((axis, i) => (
           <div key={axis.key} className="space-y-0.5">
-            <p className="text-[10px] text-muted-foreground leading-tight">{axis.fullLabel}</p>
+            <p className="text-xs text-muted-foreground leading-tight">{axis.fullLabel}</p>
           </div>
         ))}
       </div>
 
       {/* W/D/L summary row */}
-      <div className="flex items-center justify-center gap-4 text-xs">
+      <div className="flex items-center justify-center gap-4 text-sm">
         <span className="text-green-400 font-bold">{wins}V</span>
         <span className="text-yellow-400 font-bold">{draws}E</span>
         <span className="text-red-400 font-bold">{losses}D</span>

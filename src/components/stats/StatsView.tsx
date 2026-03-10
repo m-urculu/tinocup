@@ -82,12 +82,12 @@ export default function StatsView({ players, currentUserId }: StatsViewProps) {
                     unoptimized
                   />
                 ) : (
-                  <div className="w-full h-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                  <div className="w-full h-full bg-white/10 flex items-center justify-center text-xs font-bold text-muted-foreground">
                     {pInitials}
                   </div>
                 )}
               </div>
-              <span className="text-[10px] max-w-[48px] truncate">
+              <span className="text-xs max-w-[48px] truncate">
                 {p.displayName.split(" ")[0]}
               </span>
             </button>
@@ -114,28 +114,28 @@ export default function StatsView({ players, currentUserId }: StatsViewProps) {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-base truncate">{player.displayName}</p>
+            <p className="font-semibold text-lg truncate">{player.displayName}</p>
             <div className="flex items-center gap-3 mt-0.5">
-              <span className="font-[family-name:var(--font-heading)] text-xl text-gold">
+              <span className="font-[family-name:var(--font-heading)] text-2xl text-gold">
                 {player.rating}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 #{player.rank}
               </span>
             </div>
           </div>
-          <div className="flex gap-2 text-xs text-center">
+          <div className="flex gap-3 text-sm text-center">
             <div>
               <p className="font-bold text-green-400">{player.wins}</p>
-              <p className="text-[9px] text-muted-foreground">V</p>
+              <p className="text-[11px] text-muted-foreground">V</p>
             </div>
             <div>
               <p className="font-bold text-yellow-400">{player.draws}</p>
-              <p className="text-[9px] text-muted-foreground">E</p>
+              <p className="text-[11px] text-muted-foreground">E</p>
             </div>
             <div>
               <p className="font-bold text-red-400">{player.losses}</p>
-              <p className="text-[9px] text-muted-foreground">D</p>
+              <p className="text-[11px] text-muted-foreground">D</p>
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function StatsView({ players, currentUserId }: StatsViewProps) {
       <div className="flex gap-1 p-1 rounded-lg bg-white/5">
         <button
           onClick={() => setTab("radar")}
-          className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all ${
+          className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
             tab === "radar"
               ? "bg-white/10 text-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -155,7 +155,7 @@ export default function StatsView({ players, currentUserId }: StatsViewProps) {
         </button>
         <button
           onClick={() => setTab("rating")}
-          className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all ${
+          className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
             tab === "rating"
               ? "bg-white/10 text-foreground"
               : "text-muted-foreground hover:text-foreground"

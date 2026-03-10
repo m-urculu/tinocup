@@ -62,7 +62,7 @@ export default function NewGamePage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Novo Jogo</h2>
+      <h2 className="text-xl font-semibold">Novo Jogo</h2>
 
       <form onSubmit={handleSubmit} className="glass rounded-xl p-5 space-y-5">
         {/* --- Date --- */}

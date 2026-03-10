@@ -44,7 +44,7 @@ export function BottomNav({ groupId }: { groupId: string }) {
               )}
             >
               <Icon className={cn("size-5", isActive && "drop-shadow-[0_0_6px_rgba(212,175,55,0.5)]")} />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-xs font-medium">{item.label}</span>
             </Link>
           )
         })}

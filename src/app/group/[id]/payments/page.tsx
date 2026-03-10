@@ -61,7 +61,7 @@ export default async function PaymentsPage({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Pagamentos</h2>
+      <h2 className="text-xl font-semibold">Pagamentos</h2>
       <PaymentList
         payments={groupPayments ?? []}
         currentUserId={user?.id ?? ""}

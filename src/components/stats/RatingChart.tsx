@@ -33,8 +33,8 @@ export default function RatingChart({ history, currentRating }: RatingChartProps
   if (history.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <p className="text-sm">Sem dados de rating</p>
-        <p className="text-xs mt-1">Joga partidas para ver a evolução</p>
+        <p className="text-base">Sem dados de rating</p>
+        <p className="text-sm mt-1">Joga partidas para ver a evolução</p>
       </div>
     )
   }
@@ -131,7 +131,7 @@ export default function RatingChart({ history, currentRating }: RatingChartProps
               textAnchor="end"
               dominantBaseline="middle"
               className="fill-muted-foreground"
-              style={{ fontSize: "7px" }}
+              style={{ fontSize: "9px" }}
             >
               {g.label}
             </text>
@@ -169,7 +169,7 @@ export default function RatingChart({ history, currentRating }: RatingChartProps
           y={lastY - 10}
           textAnchor="middle"
           className="fill-foreground"
-          style={{ fontSize: "10px", fontWeight: 700, fontFamily: "var(--font-heading)" }}
+          style={{ fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-heading)" }}
         >
           {currentRating}
         </text>
@@ -182,7 +182,7 @@ export default function RatingChart({ history, currentRating }: RatingChartProps
             y={H - 6}
             textAnchor="middle"
             className="fill-muted-foreground"
-            style={{ fontSize: "7px" }}
+            style={{ fontSize: "9px" }}
           >
             {dl.label}
           </text>
@@ -190,7 +190,7 @@ export default function RatingChart({ history, currentRating }: RatingChartProps
       </svg>
 
       {/* Change indicator */}
-      <div className="flex items-center gap-2 text-xs">
+      <div className="flex items-center gap-2 text-sm">
         <span className="text-muted-foreground">Desde o início:</span>
         <span className="font-bold" style={{ color: changeColor }}>
           {changeText}

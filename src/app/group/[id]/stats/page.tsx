@@ -145,7 +145,7 @@ export default async function StatsPage({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Estatísticas</h2>
+      <h2 className="text-xl font-semibold">Estatísticas</h2>
       {players.length === 0 ? (
         <div className="glass rounded-xl p-8 text-center">
           <p className="text-muted-foreground">Ainda sem jogadores</p>

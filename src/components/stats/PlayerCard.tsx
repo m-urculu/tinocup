@@ -54,7 +54,7 @@ export function PlayerCardComponent({
       <div className="flex items-start justify-between mb-2">
         <span
           className={cn(
-            "font-[family-name:var(--font-heading)] text-3xl leading-none",
+            "font-[family-name:var(--font-heading)] text-4xl leading-none",
             isTop3 ? "text-gold" : "text-foreground"
           )}
         >
@@ -88,33 +88,33 @@ export function PlayerCardComponent({
               unoptimized
             />
           ) : (
-            <div className="w-full h-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+            <div className="w-full h-full bg-white/10 flex items-center justify-center text-xs font-bold text-muted-foreground">
               {initials}
             </div>
           )}
         </div>
-        <p className="text-sm font-semibold truncate">{displayName}</p>
+        <p className="text-base font-semibold truncate">{displayName}</p>
       </div>
 
       {/* --- Stats Grid --- */}
       <div className="grid grid-cols-3 gap-1 text-center">
         <div>
-          <p className="font-[family-name:var(--font-heading)] text-sm text-electric">
+          <p className="font-[family-name:var(--font-heading)] text-base text-electric">
             {winRate}%
           </p>
-          <p className="text-[9px] text-muted-foreground">VIT</p>
+          <p className="text-[11px] text-muted-foreground">VIT</p>
         </div>
         <div>
-          <p className="font-[family-name:var(--font-heading)] text-sm text-gold">
+          <p className="font-[family-name:var(--font-heading)] text-base text-gold">
             {goals}
           </p>
-          <p className="text-[9px] text-muted-foreground">GOL</p>
+          <p className="text-[11px] text-muted-foreground">GOL</p>
         </div>
         <div>
-          <p className="font-[family-name:var(--font-heading)] text-sm text-foreground">
+          <p className="font-[family-name:var(--font-heading)] text-base text-foreground">
             {gamesPlayed}
           </p>
-          <p className="text-[9px] text-muted-foreground">JG</p>
+          <p className="text-[11px] text-muted-foreground">JG</p>
         </div>
       </div>
 
