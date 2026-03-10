@@ -157,7 +157,7 @@ export default async function GameDetailPage({
           confirmed={confirmed}
           teamSize={game.team_size}
           userPhone={userPhone}
-          isCreator={isCreator}
+          gameStatus={game.status}
         />
       )}
 
