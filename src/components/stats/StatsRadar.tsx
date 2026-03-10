@@ -5,6 +5,7 @@
 // @depends (none — standalone SVG component)
 
 import { useEffect, useState } from "react"
+import { Info, X } from "lucide-react"
 
 // --- Types ---
 
@@ -63,6 +64,7 @@ export default function StatsRadar({
   gamesPlayed,
 }: StatsRadarProps) {
   const [show, setShow] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
   useEffect(() => {
     const t = setTimeout(() => setShow(true), 80)
     return () => clearTimeout(t)
@@ -102,7 +104,28 @@ export default function StatsRadar({
   )
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="relative flex flex-col items-center gap-3">
+      {/* Info button */}
+      <button
+        onClick={() => setShowInfo(!showInfo)}
+        className="absolute top-0 right-0 z-10 p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {showInfo ? <X className="size-4" /> : <Info className="size-4" />}
+      </button>
+
+      {/* Info tooltip */}
+      {showInfo && (
+        <div className="absolute top-7 right-0 z-20 w-56 glass rounded-lg p-3 text-xs space-y-1.5 border border-white/10">
+          <p className="font-semibold text-sm mb-2">Estatísticas</p>
+          <p><span className="text-foreground font-medium">VIT%</span> <span className="text-muted-foreground">— Taxa de vitória</span></p>
+          <p><span className="text-foreground font-medium">ATK</span> <span className="text-muted-foreground">— Golos por jogo</span></p>
+          <p><span className="text-foreground font-medium">EXP</span> <span className="text-muted-foreground">— Jogos disputados</span></p>
+          <p><span className="text-foreground font-medium">INV</span> <span className="text-muted-foreground">— % de jogos sem derrota</span></p>
+          <p><span className="text-foreground font-medium">EFI</span> <span className="text-muted-foreground">— Vitórias nos jogos decididos</span></p>
+          <p className="text-muted-foreground pt-1 border-t border-white/5">O número central é a média geral (0–99)</p>
+        </div>
+      )}
+
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full max-w-[280px]">
         <defs>
           <linearGradient id="rf" x1="0%" y1="0%" x2="100%" y2="100%">
