@@ -2,13 +2,13 @@
 
 // @file src/components/stats/StatsRadar.tsx
 // @description FIFA-style animated radar/spider chart for player stats
+// @depends (none — standalone SVG component)
 
 import { useEffect, useState } from "react"
 
 // --- Types ---
 
 type StatsRadarProps = {
-  rating: number
   wins: number
   draws: number
   losses: number
@@ -18,34 +18,36 @@ type StatsRadarProps = {
 
 // --- Constants ---
 
-const LABELS = ["RAT", "VIT", "GOL", "JGS", "EMP", "DEF"]
-const SIZE = 240
+const AXES = [
+  { key: "win", label: "VIT%", fullLabel: "Vitórias" },
+  { key: "atk", label: "ATK", fullLabel: "Ataque" },
+  { key: "exp", label: "EXP", fullLabel: "Experiência" },
+  { key: "inv", label: "INV", fullLabel: "Invicto" },
+  { key: "efi", label: "EFI", fullLabel: "Eficácia" },
+] as const
+
+const SIZE = 260
 const CX = SIZE / 2
 const CY = SIZE / 2
 const LEVELS = 5
-const MAX_R = 90
+const MAX_R = 88
+const N = AXES.length
 
 // --- Helpers ---
 
-/** Convert a stat to 0–1 scale */
-function normalize(value: number, max: number) {
-  return Math.min(value / max, 1)
+function clamp01(v: number) {
+  return Math.max(0, Math.min(1, v))
 }
 
-/** Get polygon point for index i at given radius */
-function getPoint(i: number, r: number, total: number) {
-  const angle = (Math.PI * 2 * i) / total - Math.PI / 2
-  return {
-    x: CX + r * Math.cos(angle),
-    y: CY + r * Math.sin(angle),
-  }
+function getPoint(i: number, r: number) {
+  const angle = (Math.PI * 2 * i) / N - Math.PI / 2
+  return { x: CX + r * Math.cos(angle), y: CY + r * Math.sin(angle) }
 }
 
-/** Build SVG polygon points string */
-function polygonPoints(values: number[]) {
+function toPolygon(values: number[]) {
   return values
     .map((v, i) => {
-      const p = getPoint(i, v * MAX_R, values.length)
+      const p = getPoint(i, v * MAX_R)
       return `${p.x},${p.y}`
     })
     .join(" ")
@@ -54,170 +56,188 @@ function polygonPoints(values: number[]) {
 // --- Component ---
 
 export default function StatsRadar({
-  rating,
   wins,
   draws,
   losses,
   goals,
   gamesPlayed,
 }: StatsRadarProps) {
-  const [animated, setAnimated] = useState(false)
-
+  const [show, setShow] = useState(false)
   useEffect(() => {
-    const t = setTimeout(() => setAnimated(true), 100)
+    const t = setTimeout(() => setShow(true), 80)
     return () => clearTimeout(t)
   }, [])
 
-  // Normalize stats to 0–1 (with sensible FIFA-like maxes)
-  const values = [
-    normalize(rating, 1200),       // RAT — max ~1200
-    normalize(wins, Math.max(gamesPlayed, 1)),  // VIT — win rate
-    normalize(goals, Math.max(gamesPlayed * 1.5, 1)), // GOL — goals relative to games
-    normalize(gamesPlayed, 30),    // JGS — experience, max 30
-    normalize(draws, Math.max(gamesPlayed, 1)),  // EMP — draw rate
-    normalize(1 - (losses / Math.max(gamesPlayed, 1)), 1), // DEF — defensive (inverse loss rate)
+  const gp = Math.max(gamesPlayed, 1)
+  const decisive = Math.max(wins + losses, 1)
+
+  // 5 practical stats normalized 0–1
+  const raw = [
+    clamp01(wins / gp),                          // VIT% — win rate
+    clamp01((goals / gp) / 1.5),                  // ATK — goals/game (1.5 gpg = 100%)
+    clamp01(gamesPlayed / 25),                    // EXP — experience (25 games = 100%)
+    clamp01((wins + draws) / gp),                 // INV — unbeaten rate
+    clamp01(wins / decisive),                     // EFI — wins / (wins+losses), ignoring draws
   ]
 
-  // Ensure minimum visibility
-  const displayValues = animated
-    ? values.map((v) => Math.max(v, 0.08))
-    : values.map(() => 0)
+  // Display labels with real values
+  const displayLabels = [
+    `${Math.round((wins / gp) * 100)}%`,
+    (goals / gp).toFixed(1),
+    `${gamesPlayed}`,
+    `${Math.round(((wins + draws) / gp) * 100)}%`,
+    `${Math.round((wins / decisive) * 100)}%`,
+  ]
 
-  const n = LABELS.length
+  // Animated values (expand from 0)
+  const vals = show ? raw.map((v) => Math.max(v, 0.06)) : raw.map(() => 0)
 
-  // Grid levels
+  // Overall rating number (average of all axes, 0–99 scale like FIFA)
+  const overall = Math.round(
+    (raw.reduce((s, v) => s + v, 0) / raw.length) * 99
+  )
+
   const gridLevels = Array.from({ length: LEVELS }, (_, i) =>
     ((i + 1) / LEVELS) * MAX_R
   )
 
-  // Stat value labels (actual numbers)
-  const statValues = [
-    rating.toString(),
-    `${gamesPlayed > 0 ? Math.round((wins / gamesPlayed) * 100) : 0}%`,
-    goals.toString(),
-    gamesPlayed.toString(),
-    draws.toString(),
-    `${gamesPlayed > 0 ? Math.round(((gamesPlayed - losses) / gamesPlayed) * 100) : 0}%`,
-  ]
-
   return (
-    <div className="flex flex-col items-center">
-      <svg
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="w-full max-w-[280px]"
-        style={{ filter: "drop-shadow(0 0 20px rgba(59, 130, 246, 0.15))" }}
-      >
+    <div className="flex flex-col items-center gap-3">
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full max-w-[280px]">
         <defs>
-          {/* Gradient fill for the stat polygon */}
-          <linearGradient id="radar-fill" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgb(34, 197, 94)" stopOpacity="0.35" />
-            <stop offset="50%" stopColor="rgb(59, 130, 246)" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="rgb(168, 85, 247)" stopOpacity="0.35" />
+          <linearGradient id="rf" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
           </linearGradient>
-          <linearGradient id="radar-stroke" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgb(34, 197, 94)" />
-            <stop offset="50%" stopColor="rgb(59, 130, 246)" />
-            <stop offset="100%" stopColor="rgb(168, 85, 247)" />
+          <linearGradient id="rs" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#3b82f6" />
           </linearGradient>
-          {/* Glow filter */}
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="blur" />
+          <filter id="gl">
+            <feGaussianBlur stdDeviation="2.5" result="b" />
             <feMerge>
-              <feMergeNode in="blur" />
+              <feMergeNode in="b" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
 
-        {/* Background grid — hexagonal levels */}
+        {/* Grid */}
         {gridLevels.map((r, li) => (
           <polygon
             key={li}
-            points={Array.from({ length: n }, (_, i) => {
-              const p = getPoint(i, r, n)
+            points={Array.from({ length: N }, (_, i) => {
+              const p = getPoint(i, r)
               return `${p.x},${p.y}`
             }).join(" ")}
             fill="none"
-            stroke="rgba(255,255,255,0.07)"
-            strokeWidth={li === LEVELS - 1 ? 1 : 0.5}
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth={li === LEVELS - 1 ? 0.8 : 0.4}
           />
         ))}
 
-        {/* Axis lines from center to each vertex */}
-        {Array.from({ length: n }, (_, i) => {
-          const p = getPoint(i, MAX_R, n)
+        {/* Axis spokes */}
+        {Array.from({ length: N }, (_, i) => {
+          const p = getPoint(i, MAX_R)
           return (
             <line
               key={i}
-              x1={CX}
-              y1={CY}
-              x2={p.x}
-              y2={p.y}
-              stroke="rgba(255,255,255,0.07)"
-              strokeWidth={0.5}
+              x1={CX} y1={CY} x2={p.x} y2={p.y}
+              stroke="rgba(255,255,255,0.06)"
+              strokeWidth={0.4}
             />
           )
         })}
 
-        {/* Stat polygon — the main shape */}
+        {/* Data shape */}
         <polygon
-          points={polygonPoints(displayValues)}
-          fill="url(#radar-fill)"
-          stroke="url(#radar-stroke)"
+          points={toPolygon(vals)}
+          fill="url(#rf)"
+          stroke="url(#rs)"
           strokeWidth={2}
-          filter="url(#glow)"
-          className="transition-all duration-1000 ease-out"
+          filter="url(#gl)"
+          className="transition-all duration-[1200ms] ease-out"
         />
 
         {/* Vertex dots */}
-        {displayValues.map((v, i) => {
-          const p = getPoint(i, v * MAX_R, n)
+        {vals.map((v, i) => {
+          const p = getPoint(i, v * MAX_R)
           return (
             <circle
               key={i}
-              cx={p.x}
-              cy={p.y}
-              r={3}
+              cx={p.x} cy={p.y} r={2.5}
               fill="white"
-              className="transition-all duration-1000 ease-out"
-              style={{ filter: "drop-shadow(0 0 4px rgba(255,255,255,0.6))" }}
+              className="transition-all duration-[1200ms] ease-out"
+              style={{ filter: "drop-shadow(0 0 3px rgba(255,255,255,0.5))" }}
             />
           )
         })}
 
-        {/* Labels around the chart */}
-        {LABELS.map((label, i) => {
-          const p = getPoint(i, MAX_R + 22, n)
+        {/* Overall rating in center */}
+        <text
+          x={CX} y={CY - 4}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="fill-foreground"
+          style={{ fontSize: "28px", fontWeight: 800, fontFamily: "var(--font-heading)" }}
+        >
+          {gamesPlayed > 0 ? overall : "—"}
+        </text>
+        <text
+          x={CX} y={CY + 14}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="fill-muted-foreground"
+          style={{ fontSize: "7px", letterSpacing: "0.15em" }}
+        >
+          OVERALL
+        </text>
+
+        {/* Axis labels + values */}
+        {AXES.map((axis, i) => {
+          const p = getPoint(i, MAX_R + 24)
           return (
-            <g key={i}>
+            <g key={axis.key}>
               <text
-                x={p.x}
-                y={p.y - 6}
+                x={p.x} y={p.y - 6}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 className="fill-muted-foreground"
-                style={{ fontSize: "8px", letterSpacing: "0.05em" }}
+                style={{ fontSize: "7px", letterSpacing: "0.08em" }}
               >
-                {label}
+                {axis.label}
               </text>
               <text
-                x={p.x}
-                y={p.y + 6}
+                x={p.x} y={p.y + 6}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 className="fill-foreground"
-                style={{
-                  fontSize: "9px",
-                  fontWeight: 700,
-                  fontFamily: "var(--font-heading)",
-                }}
+                style={{ fontSize: "10px", fontWeight: 700, fontFamily: "var(--font-heading)" }}
               >
-                {statValues[i]}
+                {gamesPlayed > 0 ? displayLabels[i] : "—"}
               </text>
             </g>
           )
         })}
       </svg>
+
+      {/* Legend row under the chart */}
+      <div className="grid grid-cols-5 gap-1 w-full text-center px-2">
+        {AXES.map((axis, i) => (
+          <div key={axis.key} className="space-y-0.5">
+            <p className="text-[10px] text-muted-foreground leading-tight">{axis.fullLabel}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* W/D/L summary row */}
+      <div className="flex items-center justify-center gap-4 text-xs">
+        <span className="text-green-400 font-bold">{wins}V</span>
+        <span className="text-yellow-400 font-bold">{draws}E</span>
+        <span className="text-red-400 font-bold">{losses}D</span>
+        <span className="text-muted-foreground">·</span>
+        <span className="text-electric font-bold">{goals} golos</span>
+      </div>
     </div>
   )
 }

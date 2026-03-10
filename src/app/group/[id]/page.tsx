@@ -89,9 +89,8 @@ export default async function GroupDashboardPage({
       </div>
 
       {/* --- FIFA-style Radar Chart --- */}
-      <div className="glass rounded-xl p-4">
+      <div className="glass rounded-xl p-4 pt-5">
         <StatsRadar
-          rating={myRating?.rating ?? 1000}
           wins={myRating?.wins ?? 0}
           draws={myRating?.draws ?? 0}
           losses={myRating?.losses ?? 0}
