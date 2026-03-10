@@ -51,7 +51,7 @@ tinocup/
 | `group/[id]/games/new/actions.ts` | Server action for creating a game — auto-sets cost from field price, auto-signs up creator. |
 | `group/[id]/games/[gameId]/page.tsx` | Game detail — signup panel, team display, score entry, goalscorers. Fetches user phone for signup. |
 | `group/[id]/games/[gameId]/actions.ts` | Server actions for game detail — signup, delete, generate teams, submit score with ELO + payments. |
-| `group/[id]/stats/page.tsx` | Leaderboard with FUT-style player cards. |
+| `group/[id]/stats/page.tsx` | Stats page — computes group-relative maximums, builds rating history, passes data to StatsView. |
 | `group/[id]/payments/page.tsx` | Payment tracker — per-game cost split, paid/unpaid toggles. |
 | `group/[id]/fields/page.tsx` | Field management — CRUD for fields (name, address, price). |
 | `group/[id]/settings/page.tsx` | Group settings — avatar upload, phone number, members list with avatars, sign out. |

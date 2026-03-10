@@ -9,25 +9,35 @@ import { Info, X } from "lucide-react"
 
 // --- Types ---
 
+type GroupMax = {
+  winRate: number
+  goalsRate: number
+  games: number
+  wins: number
+  rating: number
+}
+
 type StatsRadarProps = {
   wins: number
   draws: number
   losses: number
   goals: number
   gamesPlayed: number
+  rating: number
+  groupMax: GroupMax
 }
 
 // --- Constants ---
 
 const AXES = [
-  { key: "win", label: "VIT%", fullLabel: "Vitórias" },
-  { key: "atk", label: "ATK", fullLabel: "Ataque" },
-  { key: "exp", label: "EXP", fullLabel: "Experiência" },
-  { key: "inv", label: "INV", fullLabel: "Invicto" },
-  { key: "efi", label: "EFI", fullLabel: "Eficácia" },
+  { key: "win", label: "VIT", fullLabel: "Vitórias" },
+  { key: "gol", label: "GOL", fullLabel: "Golos/Jogo" },
+  { key: "pre", label: "PRE", fullLabel: "Presença" },
+  { key: "pdr", label: "PDR", fullLabel: "Puta de Rei" },
+  { key: "rnk", label: "RNK", fullLabel: "Ranking" },
 ] as const
 
-const SIZE = 260
+const SIZE = 280
 const CX = SIZE / 2
 const CY = SIZE / 2
 const LEVELS = 5
@@ -62,6 +72,8 @@ export default function StatsRadar({
   losses,
   goals,
   gamesPlayed,
+  rating,
+  groupMax,
 }: StatsRadarProps) {
   const [show, setShow] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
@@ -71,33 +83,37 @@ export default function StatsRadar({
   }, [])
 
   const gp = Math.max(gamesPlayed, 1)
-  const decisive = Math.max(wins + losses, 1)
 
-  // 5 practical stats normalized 0–1
+  // Raw player values (not yet normalized)
+  const winRate = wins / gp
+  const goalsRate = goals / gp
+  // 5 stats normalized relative to the group best (0–1)
   const raw = [
-    clamp01(wins / gp),                          // VIT% — win rate
-    clamp01((goals / gp) / 1.5),                  // ATK — goals/game (1.5 gpg = 100%)
-    clamp01(gamesPlayed / 25),                    // EXP — experience (25 games = 100%)
-    clamp01((wins + draws) / gp),                 // INV — unbeaten rate
-    clamp01(wins / decisive),                     // EFI — wins / (wins+losses), ignoring draws
+    clamp01(groupMax.winRate > 0 ? winRate / groupMax.winRate : 0),
+    clamp01(groupMax.goalsRate > 0 ? goalsRate / groupMax.goalsRate : 0),
+    clamp01(groupMax.games > 0 ? gamesPlayed / groupMax.games : 0),
+    clamp01(groupMax.wins > 0 ? wins / groupMax.wins : 0),
+    clamp01(groupMax.rating > 0 ? rating / groupMax.rating : 0),
   ]
 
   // Display labels with real values
   const displayLabels = [
-    `${Math.round((wins / gp) * 100)}%`,
-    (goals / gp).toFixed(1),
+    `${Math.round(winRate * 100)}%`,
+    goalsRate.toFixed(1),
     `${gamesPlayed}`,
-    `${Math.round(((wins + draws) / gp) * 100)}%`,
-    `${Math.round((wins / decisive) * 100)}%`,
+    `${wins}`,
+    `${rating}`,
   ]
 
   // Animated values (expand from 0)
   const vals = show ? raw.map((v) => Math.max(v, 0.06)) : raw.map(() => 0)
 
-  // Overall rating number (average of all axes, 0–99 scale like FIFA)
-  const overall = Math.round(
-    (raw.reduce((s, v) => s + v, 0) / raw.length) * 99
-  )
+  // Overall rating — GOL and PRE weighted 2× (reward scoring and showing up)
+  // Weights: VIT=1, GOL=2, PRE=2, PDR=1, RNK=1 → total 7
+  const weights = [1, 2, 2, 1, 1]
+  const totalWeight = weights.reduce((s, w) => s + w, 0)
+  const weightedSum = raw.reduce((s, v, i) => s + v * weights[i], 0)
+  const overall = Math.min(99, Math.round((weightedSum / totalWeight) * 99))
 
   const gridLevels = Array.from({ length: LEVELS }, (_, i) =>
     ((i + 1) / LEVELS) * MAX_R
@@ -117,29 +133,29 @@ export default function StatsRadar({
 
         <div className="space-y-3 text-sm">
           <div>
-            <p className="font-medium text-foreground">VIT% — Vitórias</p>
-            <p className="text-muted-foreground">Vitórias ÷ total de jogos. Se ganhaste 6 em 10, tens 60%.</p>
+            <p className="font-medium text-foreground">VIT — Vitórias</p>
+            <p className="text-muted-foreground">Vitórias ÷ total de jogos. Percentagem de jogos ganhos.</p>
           </div>
           <div>
-            <p className="font-medium text-foreground">ATK — Ataque</p>
-            <p className="text-muted-foreground">Golos marcados ÷ jogos disputados. Barra cheia = 1.5 golos/jogo.</p>
+            <p className="font-medium text-foreground">GOL — Golos/Jogo</p>
+            <p className="text-muted-foreground">Golos marcados ÷ jogos disputados. Média de golos por jogo.</p>
           </div>
           <div>
-            <p className="font-medium text-foreground">EXP — Experiência</p>
-            <p className="text-muted-foreground">Número de jogos disputados. Barra cheia = 25 jogos.</p>
+            <p className="font-medium text-foreground">PRE — Presença</p>
+            <p className="text-muted-foreground">Jogos disputados em relação a quem mais jogou no grupo.</p>
           </div>
           <div>
-            <p className="font-medium text-foreground">INV — Invicto</p>
-            <p className="text-muted-foreground">(Vitórias + empates) ÷ total de jogos. Quantas vezes não perdeste.</p>
+            <p className="font-medium text-foreground">PDR — Puta de Rei</p>
+            <p className="text-muted-foreground">Total de vitórias comparado com quem mais ganhou no grupo. O rei tem o eixo cheio.</p>
           </div>
           <div>
-            <p className="font-medium text-foreground">EFI — Eficácia</p>
-            <p className="text-muted-foreground">Vitórias ÷ (vitórias + derrotas). Ignora empates — quando o jogo é decidido, quantas vezes ganhas?</p>
+            <p className="font-medium text-foreground">RNK — Ranking</p>
+            <p className="text-muted-foreground">Rating ELO comparado com o #1 do grupo. Considera a força dos adversários e golos marcados.</p>
           </div>
         </div>
 
         <div className="border-t border-white/5 pt-3 text-sm text-muted-foreground">
-          O número no centro é a média de todos os eixos numa escala de 0 a 99.
+          Todos os valores são comparados com o melhor do grupo em cada categoria. O número no centro é a média ponderada (0–99): GOL e PRE contam o dobro (×2), VIT, PDR e RNK contam ×1.
         </div>
       </div>
     )
@@ -247,24 +263,24 @@ export default function StatsRadar({
 
         {/* Axis labels + values */}
         {AXES.map((axis, i) => {
-          const p = getPoint(i, MAX_R + 28)
+          const p = getPoint(i, MAX_R + 32)
           return (
             <g key={axis.key}>
               <text
-                x={p.x} y={p.y - 6}
+                x={p.x} y={p.y - 7}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 className="fill-muted-foreground"
-                style={{ fontSize: "9px", letterSpacing: "0.08em" }}
+                style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em" }}
               >
                 {axis.label}
               </text>
               <text
-                x={p.x} y={p.y + 6}
+                x={p.x} y={p.y + 8}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 className="fill-foreground"
-                style={{ fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-heading)" }}
+                style={{ fontSize: "15px", fontWeight: 700, fontFamily: "var(--font-heading)" }}
               >
                 {gamesPlayed > 0 ? displayLabels[i] : "—"}
               </text>

@@ -5,6 +5,7 @@
 // @depends (none — standalone SVG component)
 
 import { useEffect, useState } from "react"
+import { Info, X } from "lucide-react"
 
 // --- Types ---
 
@@ -25,6 +26,7 @@ const PAD_BOTTOM = 28
 
 export default function RatingChart({ history, currentRating }: RatingChartProps) {
   const [show, setShow] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
   useEffect(() => {
     const t = setTimeout(() => setShow(true), 80)
     return () => clearTimeout(t)
@@ -93,8 +95,50 @@ export default function RatingChart({ history, currentRating }: RatingChartProps
   const changeColor = ratingChange > 0 ? "#22c55e" : ratingChange < 0 ? "#ef4444" : "#888"
   const changeText = ratingChange > 0 ? `+${ratingChange}` : `${ratingChange}`
 
+  if (showInfo) {
+    return (
+      <div className="relative space-y-4 py-2">
+        <button
+          onClick={() => setShowInfo(false)}
+          className="absolute top-2 right-0 p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <X className="size-5" />
+        </button>
+
+        <p className="font-semibold text-base">Como funciona o Rating</p>
+
+        <div className="space-y-3 text-sm">
+          <div>
+            <p className="font-medium text-foreground">Sistema ELO</p>
+            <p className="text-muted-foreground">Todos começam em 1000. O rating sobe quando ganhas e desce quando perdes, com base na força do adversário.</p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground">Força do adversário</p>
+            <p className="text-muted-foreground">Ganhar contra jogadores com rating alto dá mais pontos. Perder contra jogadores fracos tira mais pontos.</p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground">Golos</p>
+            <p className="text-muted-foreground">Cada golo marcado dá um bónus ao rating, independentemente do resultado.</p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground">Empates</p>
+            <p className="text-muted-foreground">Se o teu rating for mais alto que o adversário, um empate faz-te perder pontos. Se for mais baixo, ganhas pontos.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="relative flex flex-col items-center gap-3">
+      {/* Info button */}
+      <button
+        onClick={() => setShowInfo(true)}
+        className="absolute top-0 right-0 p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <Info className="size-5" />
+      </button>
+
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className={`w-full transition-opacity duration-500 ${show ? "opacity-100" : "opacity-0"}`}

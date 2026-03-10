@@ -11,6 +11,14 @@ import RatingChart from "./RatingChart"
 
 // --- Types ---
 
+export type GroupMax = {
+  winRate: number
+  goalsRate: number
+  games: number
+  wins: number
+  rating: number
+}
+
 export type PlayerStats = {
   userId: string
   displayName: string
@@ -28,13 +36,22 @@ export type PlayerStats = {
 type StatsViewProps = {
   players: PlayerStats[]
   currentUserId: string
+  groupMax: GroupMax
 }
 
 type Tab = "radar" | "rating"
 
+// --- Helpers ---
+
+function tierColor(rating: number) {
+  if (rating >= 1100) return { border: "border-gold", text: "text-gold" }
+  if (rating >= 1000) return { border: "border-gray-300", text: "text-gray-300" }
+  return { border: "border-amber-700", text: "text-amber-700" }
+}
+
 // --- Component ---
 
-export default function StatsView({ players, currentUserId }: StatsViewProps) {
+export default function StatsView({ players, currentUserId, groupMax }: StatsViewProps) {
   const [selectedId, setSelectedId] = useState(currentUserId)
   const [tab, setTab] = useState<Tab>("radar")
 
@@ -70,7 +87,7 @@ export default function StatsView({ players, currentUserId }: StatsViewProps) {
             >
               <div
                 className={`relative size-14 rounded-full overflow-hidden border-2 transition-colors ${
-                  active ? "border-gold" : "border-transparent"
+                  active ? tierColor(p.rating).border : "border-transparent"
                 }`}
               >
                 {p.avatarUrl ? (
@@ -98,7 +115,7 @@ export default function StatsView({ players, currentUserId }: StatsViewProps) {
       {/* --- Selected player header --- */}
       <div className="glass rounded-xl p-4">
         <div className="flex items-center gap-3">
-          <div className="relative size-14 rounded-full overflow-hidden border-2 border-gold shrink-0">
+          <div className={`relative size-14 rounded-full overflow-hidden border-2 shrink-0 ${tierColor(player.rating).border}`}>
             {player.avatarUrl ? (
               <Image
                 src={player.avatarUrl}
@@ -116,7 +133,7 @@ export default function StatsView({ players, currentUserId }: StatsViewProps) {
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-lg truncate">{player.displayName}</p>
             <div className="flex items-center gap-3 mt-0.5">
-              <span className="font-[family-name:var(--font-heading)] text-2xl text-gold">
+              <span className={`font-[family-name:var(--font-heading)] text-2xl ${tierColor(player.rating).text}`}>
                 {player.rating}
               </span>
               <span className="text-sm text-muted-foreground">
@@ -175,6 +192,8 @@ export default function StatsView({ players, currentUserId }: StatsViewProps) {
             losses={player.losses}
             goals={player.goals}
             gamesPlayed={player.gamesPlayed}
+            rating={player.rating}
+            groupMax={groupMax}
           />
         ) : (
           <RatingChart

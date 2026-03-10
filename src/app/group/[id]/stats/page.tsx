@@ -4,7 +4,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import StatsView from "@/components/stats/StatsView"
-import type { PlayerStats } from "@/components/stats/StatsView"
+import type { PlayerStats, GroupMax } from "@/components/stats/StatsView"
 
 export default async function StatsPage({
   params,
@@ -120,12 +120,23 @@ export default async function StatsPage({
     }
   }
 
-  // Build player stats array
-  const players: PlayerStats[] = (ratings ?? []).map((r, index) => {
+  // Compute group maximums for relative normalization
+  const activePlayers = (ratings ?? []).filter((r) => r.games_played > 0)
+  const groupMax: GroupMax = {
+    winRate: Math.max(...activePlayers.map((r) => r.wins / r.games_played), 0),
+    goalsRate: Math.max(...activePlayers.map((r) => r.goals / r.games_played), 0),
+    games: Math.max(...activePlayers.map((r) => r.games_played), 0),
+    wins: Math.max(...activePlayers.map((r) => r.wins), 0),
+    rating: Math.max(...activePlayers.map((r) => r.rating), 0),
+  }
+
+  // Build player stats array (only players with games)
+  const withGames = (ratings ?? []).filter((r) => r.games_played > 0)
+  const players: PlayerStats[] = withGames.map((r, index) => {
     const rank =
-      index === 0 || r.rating !== ratings![index - 1].rating
+      index === 0 || r.rating !== withGames[index - 1].rating
         ? index + 1
-        : ratings!.findIndex((x) => x.rating === r.rating) + 1
+        : withGames.findIndex((x) => x.rating === r.rating) + 1
 
     const profile = r.profile as { display_name: string; avatar_url: string | null } | null
     return {
@@ -154,6 +165,7 @@ export default async function StatsPage({
         <StatsView
           players={players}
           currentUserId={user?.id ?? players[0].userId}
+          groupMax={groupMax}
         />
       )}
     </div>
