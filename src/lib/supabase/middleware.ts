@@ -34,9 +34,9 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect unauthenticated users to login (except for public routes)
   const publicPaths = ["/", "/auth/callback"]
-  const isPublicPath = publicPaths.some((path) =>
-    request.nextUrl.pathname === path
-  )
+  const isPublicPath =
+    publicPaths.some((path) => request.nextUrl.pathname === path) ||
+    request.nextUrl.pathname.startsWith("/api/cron")
 
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone()

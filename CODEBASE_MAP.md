@@ -25,6 +25,8 @@ tinocup/
 │   │   ├── stats/                    # Stats components
 │   │   ├── payment/                  # Payment components
 │   │   └── ui/                       # shadcn/ui base components
+│   ├── app/
+│   │   └── api/cron/game-reminders/  # Cron SMS reminders
 │   ├── lib/
 │   │   └── supabase/                 # Supabase client config
 │   └── types/                        # TypeScript types
@@ -41,6 +43,7 @@ tinocup/
 | `layout.tsx` | Root layout — dark FIFA theme, Inter + Bebas Neue fonts, Toaster. |
 | `page.tsx` | Landing page with phone OTP login; redirects authenticated users to their group. |
 | `globals.css` | FIFA-inspired dark theme with gold/blue accents, glassmorphism utilities. |
+| `api/cron/game-reminders/route.ts` | Cron endpoint — sends SMS reminders to confirmed players 4h before game time. |
 | `auth/callback/route.ts` | Supabase auth callback handler for OTP verification. |
 | `profile/setup/page.tsx` | First-time profile creation (display name). |
 | `group/new/page.tsx` | Create or join a group via name or invite code. |
@@ -77,8 +80,10 @@ tinocup/
 |------|-------------|
 | `utils.ts` | `cn()` helper for merging Tailwind classes. |
 | `rating.ts` | ELO rating calculation and team generation (snake draft + fairness optimization). |
+| `twilio.ts` | Thin Twilio wrapper for sending SMS messages. |
 | `supabase/client.ts` | Browser-side Supabase client. |
 | `supabase/server.ts` | Server-side Supabase client for Server Components. |
+| `supabase/admin.ts` | Service-role Supabase client that bypasses RLS — for cron jobs and admin tasks. |
 | `supabase/middleware.ts` | Supabase auth middleware — refreshes session, redirects unauthenticated users. |
 
 ### `src/types/`
@@ -101,6 +106,13 @@ tinocup/
 | `001_initial_schema.sql` | Full database schema — 10 tables with RLS policies and indexes. |
 | `002_shadow_rating.sql` | Adds `shadow_rating` column to `player_ratings` for Bayesian team balancing. |
 | `003_group_slug.sql` | Adds `slug` column to `groups` for human-readable URLs. |
+| `004_game_reminder_sent.sql` | Adds `reminder_sent` flag to games for SMS game-day reminders. |
+
+### Root
+
+| File | Description |
+|------|-------------|
+| `vercel.json` | Vercel config — hourly cron for game-day SMS reminders. |
 
 ### `scripts/`
 

@@ -31,6 +31,7 @@ export type Database = {
         Row: {
           id: string
           name: string
+          slug: string
           invite_code: string
           created_by: string
           avatar_url: string | null
@@ -39,6 +40,7 @@ export type Database = {
         Insert: {
           id?: string
           name: string
+          slug: string
           invite_code?: string
           created_by: string
           avatar_url?: string | null
@@ -46,6 +48,7 @@ export type Database = {
         }
         Update: {
           name?: string
+          slug?: string
           avatar_url?: string | null
         }
         Relationships: [
@@ -138,6 +141,7 @@ export type Database = {
           score_away: number | null
           paid_by: string | null
           cost: number | null
+          reminder_sent: boolean
           created_by: string
           created_at: string
         }
@@ -153,6 +157,7 @@ export type Database = {
           score_away?: number | null
           paid_by?: string | null
           cost?: number | null
+          reminder_sent?: boolean
           created_by: string
           created_at?: string
         }
@@ -166,6 +171,7 @@ export type Database = {
           score_away?: number | null
           paid_by?: string | null
           cost?: number | null
+          reminder_sent?: boolean
         }
         Relationships: [
           {
