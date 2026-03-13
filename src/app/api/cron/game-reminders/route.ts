@@ -121,12 +121,8 @@ export async function GET(request: Request) {
       field
     )
 
-    // TODO: Remove test filter after verifying SMS works
-    const TEST_ONLY_PHONE = "+351900000099" // Owner
-    const filteredProfiles = profiles.filter((p) => p.phone === TEST_ONLY_PHONE)
-
     let smsSent = 0
-    for (const profile of filteredProfiles) {
+    for (const profile of profiles) {
       if (!profile.phone) continue
       try {
         await sendSMS(profile.phone, message)
