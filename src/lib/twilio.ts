@@ -11,7 +11,7 @@ const client = twilio(
 export async function sendSMS(to: string, body: string) {
   return client.messages.create({
     to,
-    from: process.env.TWILIO_PHONE_NUMBER!,
+    from: "TINOCUP",
     body,
   })
 }
