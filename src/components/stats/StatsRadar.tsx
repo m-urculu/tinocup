@@ -5,6 +5,7 @@
 // @depends (none — standalone SVG component)
 
 import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
 import { Info, X } from "lucide-react"
 
 // --- Types ---
@@ -55,13 +56,13 @@ function getPoint(i: number, r: number) {
   return { x: CX + r * Math.cos(angle), y: CY + r * Math.sin(angle) }
 }
 
-function toPolygon(values: number[]) {
+function toPath(values: number[]) {
   return values
     .map((v, i) => {
       const p = getPoint(i, v * MAX_R)
-      return `${p.x},${p.y}`
+      return `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
     })
-    .join(" ")
+    .join(" ") + " Z"
 }
 
 // --- Component ---
@@ -218,24 +219,27 @@ export default function StatsRadar({
         })}
 
         {/* Data shape */}
-        <polygon
-          points={toPolygon(vals)}
+        <motion.path
+          initial={{ d: toPath(raw.map(() => 0)) }}
+          animate={{ d: toPath(vals) }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
           fill="url(#rf)"
           stroke="url(#rs)"
           strokeWidth={2}
           filter="url(#gl)"
-          className="transition-all duration-[1200ms] ease-out"
         />
 
         {/* Vertex dots */}
         {vals.map((v, i) => {
-          const p = getPoint(i, v * MAX_R)
+          const target = getPoint(i, v * MAX_R)
           return (
-            <circle
+            <motion.circle
               key={i}
-              cx={p.x} cy={p.y} r={2.5}
+              initial={{ cx: CX, cy: CY }}
+              animate={{ cx: target.x, cy: target.y }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+              r={2.5}
               fill="white"
-              className="transition-all duration-[1200ms] ease-out"
               style={{ filter: "drop-shadow(0 0 3px rgba(255,255,255,0.5))" }}
             />
           )
