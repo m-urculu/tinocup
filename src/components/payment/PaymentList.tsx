@@ -115,12 +115,7 @@ export function PaymentList({
               className={`flex items-center justify-between w-full ${allPaid ? "" : "cursor-default"} ${!allPaid ? "mb-3" : ""}`}
             >
               <p className="text-sm font-medium">
-                {game
-                  ? new Date(game.date).toLocaleDateString("pt-PT", {
-                      month: "short",
-                      day: "numeric",
-                    })
-                  : "Jogo"}
+                {game ? `Jogo às ${game.time}` : "Jogo"}
               </p>
               <div className="flex items-center gap-2">
                 <span className={`text-xs ${allPaid ? "text-green-400" : "text-muted-foreground"}`}>
@@ -135,12 +130,14 @@ export function PaymentList({
             </button>
 
             {/* --- MB Way contact for open tabs --- */}
-            {!allPaid && !isTabPicker && payerInfoMap[gameId] && (
+            {payerInfoMap[gameId] && (
               <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/10">
                 <Phone className="size-4 text-electric shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">
-                    Envia por MB Way para {payerInfoMap[gameId].name}
+                    {isTabPicker
+                      ? `Pagaste — o teu número MB Way`
+                      : `Envia por MB Way para ${payerInfoMap[gameId].name}`}
                   </p>
                   <p className="text-lg font-[family-name:var(--font-heading)] text-electric tracking-wider">
                     {formatPhone(payerInfoMap[gameId].phone)}
