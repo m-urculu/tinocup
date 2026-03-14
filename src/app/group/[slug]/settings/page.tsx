@@ -345,40 +345,16 @@ export default function SettingsPage() {
         </div>
         <div className="space-y-2">
           {members.map((m) => (
-            <div key={m.id}>
-              <button
-                onClick={() =>
-                  setExpandedMember(expandedMember === m.id ? null : m.id)
-                }
-                className="flex items-center justify-between text-base py-1.5 w-full text-left"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="relative size-7 rounded-full overflow-hidden shrink-0">
-                    {m.profile?.avatar_url ? (
-                      <Image
-                        src={m.profile.avatar_url}
-                        alt={m.profile?.display_name ?? ""}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-white/10 flex items-center justify-center text-xs font-bold text-muted-foreground">
-                        {m.profile?.display_name
-                          ? getInitials(m.profile.display_name)
-                          : "?"}
-                      </div>
-                    )}
-                  </div>
-                  <span>{m.profile?.display_name ?? "Unknown"}</span>
-                </div>
-                {m.role === "admin" && (
-                  <Crown className="size-4 text-gold" />
-                )}
-              </button>
-              {expandedMember === m.id && m.profile?.avatar_url && (
-                <div className="flex justify-center py-3">
-                  <div className="relative size-40 rounded-xl overflow-hidden border border-white/10">
+            <button
+              key={m.id}
+              onClick={() =>
+                m.profile?.avatar_url ? setExpandedMember(m.id) : undefined
+              }
+              className="flex items-center justify-between text-base py-1.5 w-full text-left"
+            >
+              <div className="flex items-center gap-2">
+                <div className="relative size-7 rounded-full overflow-hidden shrink-0">
+                  {m.profile?.avatar_url ? (
                     <Image
                       src={m.profile.avatar_url}
                       alt={m.profile?.display_name ?? ""}
@@ -386,10 +362,20 @@ export default function SettingsPage() {
                       className="object-cover"
                       unoptimized
                     />
-                  </div>
+                  ) : (
+                    <div className="w-full h-full bg-white/10 flex items-center justify-center text-xs font-bold text-muted-foreground">
+                      {m.profile?.display_name
+                        ? getInitials(m.profile.display_name)
+                        : "?"}
+                    </div>
+                  )}
                 </div>
+                <span>{m.profile?.display_name ?? "Unknown"}</span>
+              </div>
+              {m.role === "admin" && (
+                <Crown className="size-4 text-gold" />
               )}
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -403,6 +389,28 @@ export default function SettingsPage() {
         <LogOut className="size-4 mr-2" />
         Terminar Sessão
       </Button>
+
+      {/* --- Avatar Overlay --- */}
+      {expandedMember && (() => {
+        const m = members.find((m) => m.id === expandedMember)
+        if (!m?.profile?.avatar_url) return null
+        return (
+          <div
+            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center"
+            onClick={() => setExpandedMember(null)}
+          >
+            <div className="relative size-64 rounded-full overflow-hidden border-2 border-white/20">
+              <Image
+                src={m.profile.avatar_url}
+                alt={m.profile?.display_name ?? ""}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
