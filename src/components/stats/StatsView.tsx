@@ -12,11 +12,9 @@ import RatingChart from "./RatingChart"
 // --- Types ---
 
 export type GroupMax = {
-  winRate: number
-  goalsRate: number
   games: number
-  wins: number
   rating: number
+  goalsRate: number
 }
 
 export type PlayerStats = {
@@ -31,6 +29,7 @@ export type PlayerStats = {
   gamesPlayed: number
   rank: number
   ratingHistory: { date: string; rating: number }[]
+  mvpCount: number
 }
 
 type StatsViewProps = {
@@ -54,6 +53,7 @@ function tierColor(rating: number) {
 export default function StatsView({ players, currentUserId, groupMax }: StatsViewProps) {
   const [selectedId, setSelectedId] = useState(currentUserId)
   const [tab, setTab] = useState<Tab>("radar")
+  const [showAvatar, setShowAvatar] = useState(false)
 
   const player = players.find((p) => p.userId === selectedId) ?? players[0]
   if (!player) return null
@@ -68,7 +68,7 @@ export default function StatsView({ players, currentUserId, groupMax }: StatsVie
   return (
     <div className="space-y-4">
       {/* --- Player selector (horizontal scroll) --- */}
-      <div className="flex gap-3 overflow-x-auto pt-1 pb-2 -mx-4 px-4 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pt-1 pb-2 -mx-4 px-4 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x", overscrollBehaviorX: "contain" }}>
         {players.map((p) => {
           const active = p.userId === selectedId
           const pInitials = p.displayName
@@ -115,7 +115,10 @@ export default function StatsView({ players, currentUserId, groupMax }: StatsVie
       {/* --- Selected player header --- */}
       <div className="glass rounded-xl p-4">
         <div className="flex items-center gap-3">
-          <div className={`relative size-14 rounded-full overflow-hidden border-2 shrink-0 ${tierColor(player.rating).border}`}>
+          <button
+            onClick={() => player.avatarUrl && setShowAvatar(true)}
+            className={`relative size-14 rounded-full overflow-hidden border-2 shrink-0 ${tierColor(player.rating).border}`}
+          >
             {player.avatarUrl ? (
               <Image
                 src={player.avatarUrl}
@@ -129,7 +132,7 @@ export default function StatsView({ players, currentUserId, groupMax }: StatsVie
                 {initials}
               </div>
             )}
-          </div>
+          </button>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-lg truncate">{player.displayName}</p>
             <div className="flex items-center gap-3 mt-0.5">
@@ -194,6 +197,7 @@ export default function StatsView({ players, currentUserId, groupMax }: StatsVie
             gamesPlayed={player.gamesPlayed}
             rating={player.rating}
             groupMax={groupMax}
+            mvpCount={player.mvpCount}
           />
         ) : (
           <RatingChart
@@ -203,6 +207,24 @@ export default function StatsView({ players, currentUserId, groupMax }: StatsVie
           />
         )}
       </div>
+
+      {/* --- Avatar Overlay --- */}
+      {showAvatar && player.avatarUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center"
+          onClick={() => setShowAvatar(false)}
+        >
+          <div className="relative size-64 rounded-full overflow-hidden border-2 border-white/20">
+            <Image
+              src={player.avatarUrl}
+              alt={player.displayName}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

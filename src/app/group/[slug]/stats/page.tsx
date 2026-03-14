@@ -1,11 +1,12 @@
 // @file src/app/group/[slug]/stats/page.tsx
 // @description Stats page — player selector, radar chart, rating history
-// @depends lib/supabase/server, components/stats/StatsView
+// @depends lib/supabase/server, components/stats/StatsView, lib/rating
 
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import StatsView from "@/components/stats/StatsView"
 import type { PlayerStats, GroupMax } from "@/components/stats/StatsView"
+import { K_FACTOR, GOAL_BONUS } from "@/lib/rating"
 
 export default async function StatsPage({
   params,
@@ -118,27 +119,51 @@ export default async function StatsPage({
     for (const uid of homeIds) {
       if (runningRating[uid] === undefined) continue
       const goals = gameGoals[uid] ?? 0
-      const change = 32 * (homeResult - expectedHome) + goals * 5
+      const change = K_FACTOR * (homeResult - expectedHome) + goals * GOAL_BONUS
       runningRating[uid] = Math.round(runningRating[uid] + change)
       ratingHistories[uid]?.push({ date: game.date, rating: runningRating[uid] })
     }
     for (const uid of awayIds) {
       if (runningRating[uid] === undefined) continue
       const goals = gameGoals[uid] ?? 0
-      const change = 32 * (awayResult - expectedAway) + goals * 5
+      const change = K_FACTOR * (awayResult - expectedAway) + goals * GOAL_BONUS
       runningRating[uid] = Math.round(runningRating[uid] + change)
       ratingHistories[uid]?.push({ date: game.date, rating: runningRating[uid] })
+    }
+  }
+
+  // Compute per-player MVP counts
+  const mvpCounts: Record<string, number> = {}
+  if (gameIds.length > 0) {
+    const { data: mvpVotes } = await supabase
+      .from("game_mvp_votes")
+      .select("game_id, voted_for")
+      .in("game_id", gameIds)
+
+    if (mvpVotes && mvpVotes.length > 0) {
+      // Group votes by game, find winner(s) per game
+      const votesByGame: Record<string, Record<string, number>> = {}
+      for (const v of mvpVotes) {
+        if (!votesByGame[v.game_id]) votesByGame[v.game_id] = {}
+        votesByGame[v.game_id][v.voted_for] = (votesByGame[v.game_id][v.voted_for] ?? 0) + 1
+      }
+      // For each game, award MVP only to the single most voted player (skip ties)
+      for (const gameVotes of Object.values(votesByGame)) {
+        const maxVotes = Math.max(...Object.values(gameVotes))
+        const winners = Object.entries(gameVotes).filter(([, c]) => c === maxVotes)
+        if (winners.length === 1) {
+          mvpCounts[winners[0][0]] = (mvpCounts[winners[0][0]] ?? 0) + 1
+        }
+      }
     }
   }
 
   // Compute group maximums for relative normalization
   const activePlayers = (ratings ?? []).filter((r) => r.games_played > 0)
   const groupMax: GroupMax = {
-    winRate: Math.max(...activePlayers.map((r) => r.wins / r.games_played), 0),
-    goalsRate: Math.max(...activePlayers.map((r) => r.goals / r.games_played), 0),
     games: Math.max(...activePlayers.map((r) => r.games_played), 0),
-    wins: Math.max(...activePlayers.map((r) => r.wins), 0),
     rating: Math.max(...activePlayers.map((r) => r.rating), 0),
+    goalsRate: Math.max(...activePlayers.map((r) => r.goals / r.games_played), 0),
   }
 
   // Build player stats array (only players with games)
@@ -162,6 +187,7 @@ export default async function StatsPage({
       gamesPlayed: r.games_played,
       rank,
       ratingHistory: ratingHistories[r.user_id] ?? [],
+      mvpCount: mvpCounts[r.user_id] ?? 0,
     }
   })
 

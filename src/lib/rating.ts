@@ -3,7 +3,7 @@
 
 // --- Constants ---
 const K_FACTOR = 32
-const GOAL_BONUS = 5
+const GOAL_BONUS = 12
 const BASE_RATING = 1000
 const SHADOW_DECAY_GAMES = 10
 

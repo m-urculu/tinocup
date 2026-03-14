@@ -356,6 +356,48 @@ export type Database = {
           }
         ]
       }
+      game_mvp_votes: {
+        Row: {
+          id: string
+          game_id: string
+          voter_id: string
+          voted_for: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          game_id: string
+          voter_id: string
+          voted_for: string
+          created_at?: string
+        }
+        Update: {
+          voted_for?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_mvp_votes_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_mvp_votes_voter_id_fkey"
+            columns: ["voter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_mvp_votes_voted_for_fkey"
+            columns: ["voted_for"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       payments: {
         Row: {
           id: string

@@ -47,14 +47,14 @@ tinocup/
 | `auth/callback/route.ts` | Supabase auth callback handler for OTP verification. |
 | `profile/setup/page.tsx` | First-time profile creation (display name). |
 | `group/new/page.tsx` | Create or join a group via name or invite code. |
-| `group/[slug]/layout.tsx` | Group layout — fetches group by slug, wraps children with header + bottom nav. |
+| `group/[slug]/layout.tsx` | Group layout — fetches group by slug, checks for pending MVP votes, wraps children with header + bottom nav. |
 | `group/[slug]/page.tsx` | Group dashboard — quick stats, invite code, upcoming games list. |
 | `group/[slug]/games/page.tsx` | All games list with status badges and scores. |
 | `group/[slug]/games/new/page.tsx` | Create game form — date, time, field, team size. |
 | `group/[slug]/games/new/actions.ts` | Server action for creating a game — auto-sets cost from field price, auto-signs up creator. |
-| `group/[slug]/games/[gameId]/page.tsx` | Game detail — signup panel, team display, score entry, goalscorers. Fetches user phone for signup. |
-| `group/[slug]/games/[gameId]/actions.ts` | Server actions for game detail — signup, delete, generate teams, submit score with ELO + payments. |
-| `group/[slug]/stats/page.tsx` | Stats page — computes group-relative maximums, builds rating history, passes data to StatsView. |
+| `group/[slug]/games/[gameId]/page.tsx` | Game detail — signup panel, team display, score entry, goalscorers, MVP badge for completed games. |
+| `group/[slug]/games/[gameId]/actions.ts` | Server actions for game detail — signup, delete, generate teams, submit score with ELO + payments, cast MVP vote. |
+| `group/[slug]/stats/page.tsx` | Stats page — computes group-relative maximums, builds rating history, computes MVP counts, passes data to StatsView. |
 | `group/[slug]/payments/page.tsx` | Payment tracker — per-game cost split, paid/unpaid toggles. |
 | `group/[slug]/fields/page.tsx` | Field management — CRUD for fields (name, address, price). |
 | `group/[slug]/settings/page.tsx` | Group settings — avatar upload, phone number, members list with avatars, sign out. |
@@ -66,11 +66,12 @@ tinocup/
 | `LoginForm.tsx` | Phone OTP login form with send/verify steps. |
 | `InviteCodeButton.tsx` | Copy invite code to clipboard button. |
 | `layout/BottomNav.tsx` | Bottom navigation bar — Home, Games, Stats, Payments. |
-| `layout/GroupLayout.tsx` | Group page wrapper with header and bottom nav. |
+| `layout/GroupLayout.tsx` | Group page wrapper with header, bottom nav, and optional MVP vote prompt. |
 | `game/SignupPanel.tsx` | Game signup — confirm/decline attendance, phone prompt if missing, generate teams via server action. |
 | `game/TeamDisplay.tsx` | Display generated teams (home vs away). |
 | `game/ScorePanel.tsx` | Score recording — pure UI for score + goalscorers, delegates all logic to server action. |
 | `game/PaymentPanel.tsx` | Pick-up-the-tab form after game completion + payment summary with MB Way info. |
+| `game/MvpVotePrompt.tsx` | Floating banner + dialog for casting MVP votes after completed games. |
 | `stats/PlayerCard.tsx` | FUT-style player card with avatar, rating, win rate, goals, W/D/L bar. |
 | `payment/PaymentList.tsx` | Payment list grouped by game with paid/unpaid toggle. |
 
@@ -107,6 +108,7 @@ tinocup/
 | `002_shadow_rating.sql` | Adds `shadow_rating` column to `player_ratings` for Bayesian team balancing. |
 | `003_group_slug.sql` | Adds `slug` column to `groups` for human-readable URLs. |
 | `004_game_reminder_sent.sql` | Adds `reminder_sent` flag to games for SMS game-day reminders. |
+| `005_mvp_votes.sql` | MVP voting table with unique constraint per voter per game, RLS policies, and indexes. |
 
 ### Root
 

@@ -382,6 +382,66 @@ export async function pickUpTabAction(
   return { error: null }
 }
 
+// --- Cast MVP Vote ---
+
+export async function castMvpVoteAction(
+  gameId: string,
+  groupSlug: string,
+  votedForUserId: string
+) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { error: "Não autenticado" }
+
+  // Cannot vote for yourself
+  if (votedForUserId === user.id) {
+    return { error: "Não podes votar em ti próprio" }
+  }
+
+  // Verify game is completed
+  const { data: game } = await supabase
+    .from("games")
+    .select("status")
+    .eq("id", gameId)
+    .single()
+
+  if (!game) return { error: "Jogo não encontrado" }
+  if (game.status !== "completed") return { error: "O jogo ainda não está concluído" }
+
+  // Verify both voter and target played in this game
+  const { data: teams } = await supabase
+    .from("game_teams")
+    .select("user_id")
+    .eq("game_id", gameId)
+
+  const playerIds = (teams ?? []).map((t) => t.user_id)
+  if (!playerIds.includes(user.id)) {
+    return { error: "Não participaste neste jogo" }
+  }
+  if (!playerIds.includes(votedForUserId)) {
+    return { error: "Esse jogador não participou neste jogo" }
+  }
+
+  // Upsert vote (allows changing vote)
+  const { error } = await supabase.from("game_mvp_votes").upsert(
+    {
+      game_id: gameId,
+      voter_id: user.id,
+      voted_for: votedForUserId,
+    },
+    { onConflict: "game_id,voter_id" }
+  )
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/group/${groupSlug}/games/${gameId}`)
+  revalidatePath(`/group/${groupSlug}`)
+  return { error: null }
+}
+
 // --- Update Phone and Signup ---
 
 export async function updatePhoneAndSignup(

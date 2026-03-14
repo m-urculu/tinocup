@@ -11,11 +11,9 @@ import { Info, X } from "lucide-react"
 // --- Types ---
 
 type GroupMax = {
-  winRate: number
-  goalsRate: number
   games: number
-  wins: number
   rating: number
+  goalsRate: number
 }
 
 type StatsRadarProps = {
@@ -26,17 +24,27 @@ type StatsRadarProps = {
   gamesPlayed: number
   rating: number
   groupMax: GroupMax
+  mvpCount: number
 }
 
 // --- Constants ---
 
 const AXES = [
-  { key: "win", label: "VIT", fullLabel: "Vitórias" },
+  { key: "vit", label: "VIT", fullLabel: "Vitórias" },
   { key: "gol", label: "GOL", fullLabel: "Golos/Jogo" },
   { key: "pre", label: "PRE", fullLabel: "Presença" },
+  { key: "mvp", label: "MVP", fullLabel: "MVP/Jogo" },
   { key: "pdr", label: "PDR", fullLabel: "Puta de Rei" },
-  { key: "rnk", label: "RNK", fullLabel: "Ranking" },
 ] as const
+
+// Absolute ceilings — the value at which an axis reaches 100%
+const GOL_CEILING = 5.0   // 5 goals/game = full axis
+const MVP_CEILING = 0.5   // MVP in 50% of games = full axis
+
+// Bayesian prior — assume average until proven otherwise
+// Everyone starts at AVG_PRIOR and converges to real rate over PRIOR_K games
+const AVG_PRIOR = 0.3     // "average" baseline on 0–1 scale
+const PRIOR_K = 3          // games needed for real rate to have 50% weight
 
 const SIZE = 280
 const CX = SIZE / 2
@@ -75,6 +83,7 @@ export default function StatsRadar({
   gamesPlayed,
   rating,
   groupMax,
+  mvpCount,
 }: StatsRadarProps) {
   const [show, setShow] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
@@ -85,35 +94,49 @@ export default function StatsRadar({
 
   const gp = Math.max(gamesPlayed, 1)
 
-  // Raw player values (not yet normalized)
+  // Per-game rates
   const winRate = wins / gp
   const goalsRate = goals / gp
-  // 5 stats normalized relative to the group best (0–1)
-  const raw = [
-    clamp01(groupMax.winRate > 0 ? winRate / groupMax.winRate : 0),
-    clamp01(groupMax.goalsRate > 0 ? goalsRate / groupMax.goalsRate : 0),
-    clamp01(groupMax.games > 0 ? gamesPlayed / groupMax.games : 0),
-    clamp01(groupMax.wins > 0 ? wins / groupMax.wins : 0),
-    clamp01(groupMax.rating > 0 ? rating / groupMax.rating : 0),
-  ]
+  const mvpRate = mvpCount / gp
+
+  // Bayesian adjustment: start at AVG_PRIOR, converge to real rate with more games
+  // 1 game: ~83% prior, 5 games: 50/50, 10 games: ~67% real, 20 games: ~80% real
+  const bayesian = (rawNorm: number) =>
+    (AVG_PRIOR * PRIOR_K + rawNorm * gamesPlayed) / (PRIOR_K + gamesPlayed)
+
+  // 4 independent axes — rate axes use Bayesian adjustment, PRE is raw
+  const vitNorm = bayesian(clamp01(winRate))
+  const golNorm = clamp01(groupMax.goalsRate > 0 ? goalsRate / groupMax.goalsRate : 0) // relative to top scorer
+  const preNorm = clamp01(groupMax.games > 0 ? gamesPlayed / groupMax.games : 0) // relative to most present
+  const mvpNorm = bayesian(clamp01(mvpRate / MVP_CEILING))
+
+  // ELO normalized against group best (already Bayesian-like — starts at 1000, moves slowly)
+  const eloNorm = clamp01(groupMax.rating > 0 ? rating / groupMax.rating : 0)
+
+  // PDR composite: 25% VIT + 20% GOL + 15% MVP + 15% PRE + 25% ELO
+  const pdrNorm = vitNorm * 0.25 + golNorm * 0.20 + mvpNorm * 0.15 + preNorm * 0.15 + eloNorm * 0.25
+
+  const raw = [vitNorm, golNorm, preNorm, mvpNorm, pdrNorm]
 
   // Display labels with real values
+  const pdrScore = Math.min(99, Math.round(pdrNorm * 99))
   const displayLabels = [
     `${Math.round(winRate * 100)}%`,
     goalsRate.toFixed(1),
     `${gamesPlayed}`,
-    `${wins}`,
-    `${rating}`,
+    `${mvpCount}`,
+    `${pdrScore}`,
   ]
 
   // Animated values (expand from 0)
   const vals = show ? raw.map((v) => Math.max(v, 0.06)) : raw.map(() => 0)
 
-  // Overall rating — GOL and PRE weighted 2× (reward scoring and showing up)
-  // Weights: VIT=1, GOL=2, PRE=2, PDR=1, RNK=1 → total 7
-  const weights = [1, 2, 2, 1, 1]
+  // Overall = weighted avg of 4 independent axes (PDR excluded to avoid double-counting)
+  // Weights: VIT×2, GOL×2, PRE×1, MVP×1 → total 6
+  const indepAxes = [vitNorm, golNorm, preNorm, mvpNorm]
+  const weights = [2, 2, 1, 1]
   const totalWeight = weights.reduce((s, w) => s + w, 0)
-  const weightedSum = raw.reduce((s, v, i) => s + v * weights[i], 0)
+  const weightedSum = indepAxes.reduce((s, v, i) => s + v * weights[i], 0)
   const overall = Math.min(99, Math.round((weightedSum / totalWeight) * 99))
 
   const gridLevels = Array.from({ length: LEVELS }, (_, i) =>
@@ -132,31 +155,37 @@ export default function StatsRadar({
 
         <p className="font-semibold text-base">Como funcionam as estatísticas</p>
 
-        <div className="space-y-3 text-sm">
+        <div className="space-y-4 text-sm">
           <div>
             <p className="font-medium text-foreground">VIT — Vitórias</p>
-            <p className="text-muted-foreground">Vitórias ÷ total de jogos. Percentagem de jogos ganhos.</p>
+            <p className="text-muted-foreground font-mono text-xs mt-0.5">(0.9 + vitórias) ÷ (3 + jogos)</p>
+            <p className="text-muted-foreground mt-1">Ganhar é o que importa. Mede a tua capacidade de arrastar a equipa para a vitória, jogo após jogo. Com poucos jogos o sistema assume que és médio — prova o contrário.</p>
           </div>
           <div>
             <p className="font-medium text-foreground">GOL — Golos/Jogo</p>
-            <p className="text-muted-foreground">Golos marcados ÷ jogos disputados. Média de golos por jogo.</p>
+            <p className="text-muted-foreground font-mono text-xs mt-0.5">teus golos/jogo ÷ melhor golos/jogo do grupo</p>
+            <p className="text-muted-foreground mt-1">O instinto de finalizador. Não basta jogar bonito — a bola tem de entrar. O melhor marcador do grupo é a referência e tem o eixo cheio.</p>
           </div>
           <div>
             <p className="font-medium text-foreground">PRE — Presença</p>
-            <p className="text-muted-foreground">Jogos disputados em relação a quem mais jogou no grupo.</p>
+            <p className="text-muted-foreground font-mono text-xs mt-0.5">teus jogos ÷ máx. jogos do grupo</p>
+            <p className="text-muted-foreground mt-1">Aparecer já é metade da batalha. Mede a tua dedicação ao grupo — quem aparece sempre está no topo. O jogador mais assíduo tem o eixo cheio.</p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground">MVP — MVP/Jogo</p>
+            <p className="text-muted-foreground font-mono text-xs mt-0.5">(0.9 + MVPs×2) ÷ (3 + jogos)</p>
+            <p className="text-muted-foreground mt-1">O reconhecimento dos teus companheiros. Ser MVP não se compra — ganha-se em campo. Mede quantas vezes foste o melhor em relação ao total de jogos.</p>
           </div>
           <div>
             <p className="font-medium text-foreground">PDR — Puta de Rei</p>
-            <p className="text-muted-foreground">Total de vitórias comparado com quem mais ganhou no grupo. O rei tem o eixo cheio.</p>
-          </div>
-          <div>
-            <p className="font-medium text-foreground">RNK — Ranking</p>
-            <p className="text-muted-foreground">Rating ELO comparado com o #1 do grupo. Considera a força dos adversários e golos marcados.</p>
+            <p className="text-muted-foreground font-mono text-xs mt-0.5">25%VIT + 20%GOL + 15%MVP + 15%PRE + 25%×(ELO ÷ melhor ELO)</p>
+            <p className="text-muted-foreground mt-1">O selo de rei. Não basta ser bom numa coisa — o PDR exige tudo: ganhar, marcar, aparecer, ser votado e ter um rating forte. O jogador mais completo domina este eixo.</p>
           </div>
         </div>
 
         <div className="border-t border-white/5 pt-3 text-sm text-muted-foreground">
-          Todos os valores são comparados com o melhor do grupo em cada categoria. O número no centro é a média ponderada (0–99): GOL e PRE contam o dobro (×2), VIT, PDR e RNK contam ×1.
+          <p className="font-mono text-xs">Overall = (VIT×2 + GOL×2 + PRE + MVP) ÷ 6 × 99</p>
+          <p className="mt-1">O número no centro. Vitórias e golos pesam o dobro — porque no fim do dia, o futebol decide-se com bola na rede e braços no ar.</p>
         </div>
       </div>
     )
@@ -309,6 +338,8 @@ export default function StatsRadar({
         <span className="text-red-400 font-bold">{losses}D</span>
         <span className="text-muted-foreground">·</span>
         <span className="text-electric font-bold">{goals} golos</span>
+        <span className="text-muted-foreground">·</span>
+        <span className="text-gold font-bold">{mvpCount} MVP</span>
       </div>
     </div>
   )

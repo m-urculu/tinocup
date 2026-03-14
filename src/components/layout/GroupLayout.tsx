@@ -1,19 +1,23 @@
 "use client"
 
 // @file src/components/layout/GroupLayout.tsx
-// @description Wraps group pages with bottom nav and top header
-// @depends components/layout/BottomNav
+// @description Wraps group pages with bottom nav, top header, and optional MVP vote prompt
+// @depends components/layout/BottomNav, components/game/MvpVotePrompt
 
 import { useEffect, useRef } from "react"
 import { BottomNav } from "./BottomNav"
+import { MvpVotePrompt } from "@/components/game/MvpVotePrompt"
+import type { PendingMvpGame } from "@/components/game/MvpVotePrompt"
 
 export function GroupLayout({
   groupSlug,
   groupName,
+  pendingMvpGame,
   children,
 }: {
   groupSlug: string
   groupName: string
+  pendingMvpGame?: PendingMvpGame | null
   children: React.ReactNode
 }) {
   const titleRef = useRef<HTMLHeadingElement>(null)
@@ -57,6 +61,11 @@ export function GroupLayout({
       <main className="flex-1 px-4 pb-20 pt-4">
         <div className="mx-auto max-w-lg">{children}</div>
       </main>
+
+      {/* --- MVP Vote Prompt --- */}
+      {pendingMvpGame && (
+        <MvpVotePrompt groupSlug={groupSlug} pendingGame={pendingMvpGame} />
+      )}
 
       {/* --- Bottom Nav --- */}
       <BottomNav groupSlug={groupSlug} />

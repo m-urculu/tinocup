@@ -70,6 +70,7 @@ export default async function GameDetailPage({
     .from("game_goals")
     .select("*, profile:profiles(display_name)")
     .eq("game_id", gameId)
+    .order("count", { ascending: false })
 
   // Fetch payments with profiles
   const { data: payments } = await supabase
@@ -88,6 +89,36 @@ export default async function GameDetailPage({
       .single()
     paidByName = payerProfile?.display_name ?? null
     paidByPhone = payerProfile?.phone ?? null
+  }
+
+  // Fetch MVP votes for completed games
+  let mvpWinners: { displayName: string; voteCount: number }[] = []
+  if (game.status === "completed") {
+    const { data: mvpVotes } = await supabase
+      .from("game_mvp_votes")
+      .select("voted_for, profile:profiles!game_mvp_votes_voted_for_fkey(display_name)")
+      .eq("game_id", gameId)
+
+    if (mvpVotes && mvpVotes.length > 0) {
+      // Count votes per player
+      const voteCounts: Record<string, { displayName: string; count: number }> = {}
+      for (const v of mvpVotes) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const raw = v.profile as any
+        const profile = Array.isArray(raw) ? raw[0] : raw
+        const name = profile?.display_name ?? "Unknown"
+        if (!voteCounts[v.voted_for]) {
+          voteCounts[v.voted_for] = { displayName: name, count: 0 }
+        }
+        voteCounts[v.voted_for].count++
+      }
+      // Find max votes
+      const maxVotes = Math.max(...Object.values(voteCounts).map((v) => v.count))
+      // All players with max votes are MVPs (handles ties)
+      mvpWinners = Object.values(voteCounts)
+        .filter((v) => v.count === maxVotes)
+        .map((v) => ({ displayName: v.displayName, voteCount: v.count }))
+    }
   }
 
   const confirmed = signups?.filter((s) => s.status === "confirmed") ?? []
@@ -218,6 +249,25 @@ export default async function GameDetailPage({
               </div>
             ))}
           </div>
+          {mvpWinners.length > 0 && (
+            <>
+              <div className="border-t border-white/10 my-3" />
+              <h3 className="text-sm font-semibold mb-2">MVP</h3>
+              <div className="space-y-1">
+                {mvpWinners.map((mvp) => (
+                  <div
+                    key={mvp.displayName}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span className="text-gold">{mvp.displayName}</span>
+                    <span className="text-gold font-[family-name:var(--font-heading)] text-lg">
+                      {mvp.voteCount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 

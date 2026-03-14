@@ -14,6 +14,7 @@ export type GameTeam = Database["public"]["Tables"]["game_teams"]["Row"]
 export type GameGoal = Database["public"]["Tables"]["game_goals"]["Row"]
 export type PlayerRating = Database["public"]["Tables"]["player_ratings"]["Row"]
 export type Payment = Database["public"]["Tables"]["payments"]["Row"]
+export type GameMvpVote = Database["public"]["Tables"]["game_mvp_votes"]["Row"]
 
 // --- Composite Types ---
 export type GameWithDetails = Game & {
