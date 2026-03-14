@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const [savingName, setSavingName] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [expandedMember, setExpandedMember] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -344,13 +345,40 @@ export default function SettingsPage() {
         </div>
         <div className="space-y-2">
           {members.map((m) => (
-            <div
-              key={m.id}
-              className="flex items-center justify-between text-base py-1.5"
-            >
-              <div className="flex items-center gap-2">
-                <div className="relative size-7 rounded-full overflow-hidden shrink-0">
-                  {m.profile?.avatar_url ? (
+            <div key={m.id}>
+              <button
+                onClick={() =>
+                  setExpandedMember(expandedMember === m.id ? null : m.id)
+                }
+                className="flex items-center justify-between text-base py-1.5 w-full text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="relative size-7 rounded-full overflow-hidden shrink-0">
+                    {m.profile?.avatar_url ? (
+                      <Image
+                        src={m.profile.avatar_url}
+                        alt={m.profile?.display_name ?? ""}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-white/10 flex items-center justify-center text-xs font-bold text-muted-foreground">
+                        {m.profile?.display_name
+                          ? getInitials(m.profile.display_name)
+                          : "?"}
+                      </div>
+                    )}
+                  </div>
+                  <span>{m.profile?.display_name ?? "Unknown"}</span>
+                </div>
+                {m.role === "admin" && (
+                  <Crown className="size-4 text-gold" />
+                )}
+              </button>
+              {expandedMember === m.id && m.profile?.avatar_url && (
+                <div className="flex justify-center py-3">
+                  <div className="relative size-40 rounded-xl overflow-hidden border border-white/10">
                     <Image
                       src={m.profile.avatar_url}
                       alt={m.profile?.display_name ?? ""}
@@ -358,18 +386,8 @@ export default function SettingsPage() {
                       className="object-cover"
                       unoptimized
                     />
-                  ) : (
-                    <div className="w-full h-full bg-white/10 flex items-center justify-center text-xs font-bold text-muted-foreground">
-                      {m.profile?.display_name
-                        ? getInitials(m.profile.display_name)
-                        : "?"}
-                    </div>
-                  )}
+                  </div>
                 </div>
-                <span>{m.profile?.display_name ?? "Unknown"}</span>
-              </div>
-              {m.role === "admin" && (
-                <Crown className="size-4 text-gold" />
               )}
             </div>
           ))}
