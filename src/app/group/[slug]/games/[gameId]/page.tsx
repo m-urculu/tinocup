@@ -184,7 +184,7 @@ export default async function GameDetailPage({
         )}
 
       {/* --- Payment (after game completed) --- */}
-      {game.status === "completed" && totalPlayers > 0 && !game.paid_by && (
+      {game.status === "completed" && totalPlayers > 0 && (
         <PaymentPanel
           gameId={gameId}
           groupSlug={slug}
