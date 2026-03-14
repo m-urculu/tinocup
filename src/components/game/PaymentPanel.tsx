@@ -105,16 +105,16 @@ export function PaymentPanel({
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Dividido por {totalPlayers - 1} jogadores = €
-          {amount && totalPlayers > 1 ? (parseFloat(amount) / (totalPlayers - 1)).toFixed(2) : "0.00"} each
+          Dividido por {totalPlayers} jogadores = €
+          {amount && totalPlayers > 0 ? (parseFloat(amount) / totalPlayers).toFixed(2) : "0.00"} cada
         </p>
       </div>
     )
   }
 
   // Tab was picked up — show summary
-  const perPlayer = totalCost && totalPlayers > 1
-    ? Math.round((totalCost / (totalPlayers - 1)) * 100) / 100
+  const perPlayer = totalCost && totalPlayers > 0
+    ? Math.round((totalCost / totalPlayers) * 100) / 100
     : 0
   const isPayer = currentUserId === paidBy
 

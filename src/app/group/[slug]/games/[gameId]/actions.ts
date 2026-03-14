@@ -343,8 +343,8 @@ export async function pickUpTabAction(
 
   const allPlayerIds = teams.map((t) => t.user_id)
   const otherPlayerIds = allPlayerIds.filter((id) => id !== user.id)
-  const perPlayer = otherPlayerIds.length > 0
-    ? Math.round((totalAmount / otherPlayerIds.length) * 100) / 100
+  const perPlayer = allPlayerIds.length > 0
+    ? Math.round((totalAmount / allPlayerIds.length) * 100) / 100
     : 0
 
   // Set paid_by and cost on game
