@@ -4,7 +4,7 @@
 // @description Phone OTP login form — validates phone against member list, then sends OTP
 // @depends lib/supabase/client, app/auth/actions
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -24,10 +24,17 @@ export function LoginForm() {
   const [phone, setPhone] = useState("")
   const [otp, setOtp] = useState("")
   const [loading, setLoading] = useState(false)
+  const [countdown, setCountdown] = useState(0)
   const supabase = createClient()
   const router = useRouter()
 
   const fullPhone = `+351${phone.replace(/\s/g, "")}`
+
+  useEffect(() => {
+    if (countdown <= 0) return
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [countdown])
 
   async function handleSendOtp() {
     const digits = phone.replace(/\s/g, "")
@@ -58,8 +65,22 @@ export function LoginForm() {
 
     toast.success("Código enviado!")
     setStep("otp")
+    setCountdown(60)
     setLoading(false)
   }
+
+  const handleResendOtp = useCallback(async () => {
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithOtp({ phone: fullPhone })
+    if (error) {
+      toast.error(error.message)
+      setLoading(false)
+      return
+    }
+    toast.success("Código reenviado!")
+    setCountdown(60)
+    setLoading(false)
+  }, [supabase.auth, fullPhone])
 
   async function handleVerifyOtp() {
     if (otp.length < 6) {
@@ -108,7 +129,14 @@ export function LoginForm() {
           {loading ? "A verificar..." : "Verificar"}
         </Button>
         <button
-          onClick={() => { setStep("phone"); setOtp("") }}
+          onClick={handleResendOtp}
+          disabled={countdown > 0 || loading}
+          className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-default disabled:hover:text-muted-foreground"
+        >
+          {countdown > 0 ? `Reenviar código (${countdown}s)` : "Reenviar código"}
+        </button>
+        <button
+          onClick={() => { setStep("phone"); setOtp(""); setCountdown(0) }}
           className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           Usar outro número
