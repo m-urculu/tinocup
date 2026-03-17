@@ -13,6 +13,81 @@ import {
   getEffectiveRating,
 } from "@/lib/rating"
 
+// --- Update Game ---
+
+export async function updateGame(
+  gameId: string,
+  groupSlug: string,
+  data: { date: string; time: string; locationName: string }
+) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { error: "Não autenticado" }
+
+  // Verify creator + status
+  const { data: game } = await supabase
+    .from("games")
+    .select("created_by, status, group_id")
+    .eq("id", gameId)
+    .single()
+
+  if (!game || game.created_by !== user.id) {
+    return { error: "Apenas o criador pode editar este jogo" }
+  }
+  if (game.status !== "upcoming") {
+    return { error: "Só é possível editar jogos futuros" }
+  }
+
+  // Resolve field from location name
+  let fieldId: string | null = null
+  let gameCost: number | null = null
+
+  if (data.locationName.trim()) {
+    const { data: existing } = await supabase
+      .from("fields")
+      .select("id, price_per_hour")
+      .eq("group_id", game.group_id)
+      .eq("name", data.locationName.trim())
+      .single()
+
+    if (existing) {
+      fieldId = existing.id
+      if (existing.price_per_hour > 0) gameCost = existing.price_per_hour
+    } else {
+      const { data: newField, error: fieldError } = await supabase
+        .from("fields")
+        .insert({
+          group_id: game.group_id,
+          name: data.locationName.trim(),
+          price_per_hour: 0,
+        })
+        .select()
+        .single()
+
+      if (fieldError) return { error: fieldError.message }
+      fieldId = newField.id
+    }
+  }
+
+  const { error } = await supabase
+    .from("games")
+    .update({
+      date: data.date,
+      time: data.time,
+      field_id: fieldId,
+      cost: gameCost,
+    })
+    .eq("id", gameId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/group/${groupSlug}/games/${gameId}`)
+  return { error: null }
+}
+
 export async function signupForGame(
   gameId: string,
   groupSlug: string,
@@ -25,26 +100,26 @@ export async function signupForGame(
 
   if (!user) return { error: "Não autenticado" }
 
+  const { data: game } = await supabase
+    .from("games")
+    .select("team_size, status")
+    .eq("id", gameId)
+    .single()
+
+  if (!game) return { error: "Jogo não encontrado" }
+
   // Check capacity if confirming
   if (status === "confirmed") {
-    const { data: game } = await supabase
-      .from("games")
-      .select("team_size")
-      .eq("id", gameId)
-      .single()
+    const maxPlayers = game.team_size * 2
+    const { count } = await supabase
+      .from("game_signups")
+      .select("id", { count: "exact", head: true })
+      .eq("game_id", gameId)
+      .eq("status", "confirmed")
+      .neq("user_id", user.id)
 
-    if (game) {
-      const maxPlayers = game.team_size * 2
-      const { count } = await supabase
-        .from("game_signups")
-        .select("id", { count: "exact", head: true })
-        .eq("game_id", gameId)
-        .eq("status", "confirmed")
-        .neq("user_id", user.id)
-
-      if ((count ?? 0) >= maxPlayers) {
-        return { error: "Jogo cheio" }
-      }
+    if ((count ?? 0) >= maxPlayers) {
+      return { error: "Jogo cheio" }
     }
   }
 
@@ -58,6 +133,15 @@ export async function signupForGame(
   )
 
   if (error) return { error: error.message }
+
+  // If someone declines after teams were set, delete teams and reset to upcoming
+  if (status === "declined" && game.status === "teams_set") {
+    await supabase.from("game_teams").delete().eq("game_id", gameId)
+    await supabase
+      .from("games")
+      .update({ status: "upcoming" })
+      .eq("id", gameId)
+  }
 
   revalidatePath(`/group/${groupSlug}/games/${gameId}`)
   return { error: null }
@@ -181,7 +265,8 @@ export async function submitScoreAction(
   groupSlug: string,
   scoreHome: number,
   scoreAway: number,
-  goals: Record<string, number>
+  goals: Record<string, number>,
+  autoGoals: Record<string, number> = {}
 ) {
   const supabase = await createClient()
   const {
@@ -212,13 +297,15 @@ export async function submitScoreAction(
 
   if (scoreError) return { error: scoreError.message }
 
-  // Insert goal records
-  const goalInserts = Object.entries(goals)
-    .filter(([, count]) => count > 0)
-    .map(([userId, count]) => ({
+  // Insert goal records (regular + auto-goals)
+  const allPlayerIds = new Set([...Object.keys(goals), ...Object.keys(autoGoals)])
+  const goalInserts = [...allPlayerIds]
+    .filter((userId) => (goals[userId] ?? 0) > 0 || (autoGoals[userId] ?? 0) > 0)
+    .map((userId) => ({
       game_id: gameId,
       user_id: userId,
-      count,
+      count: goals[userId] ?? 0,
+      auto_goals: autoGoals[userId] ?? 0,
     }))
 
   if (goalInserts.length > 0) {
@@ -274,11 +361,13 @@ export async function submitScoreAction(
         : calculateExpected(awayAvg, homeAvg)
       const actual = isHome ? homeActual : awayActual
       const playerGoals = goals[rating.user_id] ?? 0
+      const playerAutoGoals = autoGoals[rating.user_id] ?? 0
       const newRating = calculateNewRating(
         rating.rating,
         expected,
         actual,
-        playerGoals
+        playerGoals,
+        playerAutoGoals
       )
 
       const isWin =

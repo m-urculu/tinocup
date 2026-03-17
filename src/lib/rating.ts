@@ -4,6 +4,7 @@
 // --- Constants ---
 const K_FACTOR = 32
 const GOAL_BONUS = 12
+const AUTO_GOAL_PENALTY = -12
 const BASE_RATING = 1000
 const SHADOW_DECAY_GAMES = 10
 
@@ -16,11 +17,13 @@ export function calculateNewRating(
   currentRating: number,
   expected: number,
   actual: number,
-  goalsScored: number
+  goalsScored: number,
+  autoGoals: number = 0
 ): number {
   const eloChange = K_FACTOR * (actual - expected)
   const goalBonus = goalsScored * GOAL_BONUS
-  return Math.round(currentRating + eloChange + goalBonus)
+  const autoGoalPenalty = autoGoals * AUTO_GOAL_PENALTY
+  return Math.round(currentRating + eloChange + goalBonus + autoGoalPenalty)
 }
 
 // --- Shadow Rating (Bayesian Prior) ---
@@ -119,4 +122,4 @@ function shuffleArray<T>(array: T[]): void {
   }
 }
 
-export { BASE_RATING, K_FACTOR, GOAL_BONUS, SHADOW_DECAY_GAMES }
+export { BASE_RATING, K_FACTOR, GOAL_BONUS, AUTO_GOAL_PENALTY, SHADOW_DECAY_GAMES }

@@ -9,6 +9,8 @@ import { TeamDisplay } from "@/components/game/TeamDisplay"
 import { ScorePanel } from "@/components/game/ScorePanel"
 import { PaymentPanel } from "@/components/game/PaymentPanel"
 import { DeleteGameButton } from "@/components/game/DeleteGameButton"
+import Link from "next/link"
+import { Pencil } from "lucide-react"
 
 export default async function GameDetailPage({
   params,
@@ -62,7 +64,7 @@ export default async function GameDetailPage({
   // Fetch teams with profiles
   const { data: teams } = await supabase
     .from("game_teams")
-    .select("*, profile:profiles(display_name)")
+    .select("*, profile:profiles(display_name, avatar_url)")
     .eq("game_id", gameId)
 
   // Fetch goals with profiles
@@ -140,9 +142,19 @@ export default async function GameDetailPage({
               day: "numeric",
             })}
           </p>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gold/20 text-gold font-medium">
-            {game.team_size}v{game.team_size}
-          </span>
+          <div className="flex items-center gap-2">
+            {isCreator && game.status === "upcoming" && (
+              <Link
+                href={`/group/${slug}/games/${gameId}/edit`}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Pencil className="size-4" />
+              </Link>
+            )}
+            <span className="text-xs px-2 py-0.5 rounded-full bg-gold/20 text-gold font-medium">
+              {game.team_size}v{game.team_size}
+            </span>
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
           {game.time}
@@ -243,9 +255,18 @@ export default async function GameDetailPage({
                 <span>
                   {(goal.profile as { display_name: string }).display_name}
                 </span>
-                <span className="text-gold font-[family-name:var(--font-heading)] text-lg">
-                  {goal.count}
-                </span>
+                <div className="flex items-center gap-2">
+                  {goal.count > 0 && (
+                    <span className="text-gold font-[family-name:var(--font-heading)] text-lg">
+                      {goal.count}
+                    </span>
+                  )}
+                  {(goal.auto_goals ?? 0) > 0 && (
+                    <span className="text-red-400 font-[family-name:var(--font-heading)] text-lg">
+                      {goal.auto_goals} AG
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>

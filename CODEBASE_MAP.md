@@ -13,7 +13,7 @@ tinocup/
 │   │   │   └── [slug]/               # Group pages (slug-based URLs)
 │   │   │       ├── games/
 │   │   │       │   ├── new/          # Create game
-│   │   │       │   └── [gameId]/     # Game detail
+│   │   │       │   └── [gameId]/     # Game detail + edit
 │   │   │       ├── stats/            # Leaderboard
 │   │   │       ├── payments/         # Payment tracker
 │   │   │       ├── fields/           # Field management
@@ -52,8 +52,9 @@ tinocup/
 | `group/[slug]/games/page.tsx` | All games list with status badges and scores. |
 | `group/[slug]/games/new/page.tsx` | Create game form — date, time, field, team size. |
 | `group/[slug]/games/new/actions.ts` | Server action for creating a game — auto-sets cost from field price, auto-signs up creator. |
-| `group/[slug]/games/[gameId]/page.tsx` | Game detail — signup panel, team display, score entry, goalscorers, MVP badge for completed games. |
-| `group/[slug]/games/[gameId]/actions.ts` | Server actions for game detail — signup, delete, generate teams, submit score with ELO + payments, cast MVP vote. |
+| `group/[slug]/games/[gameId]/page.tsx` | Game detail — signup panel, team display, score entry, goalscorers, MVP badge, edit link for creator. |
+| `group/[slug]/games/[gameId]/edit/page.tsx` | Edit game form — date, time, location (creator only, upcoming games). |
+| `group/[slug]/games/[gameId]/actions.ts` | Server actions for game detail — signup, update, delete, generate teams, submit score with ELO + payments, cast MVP vote. |
 | `group/[slug]/stats/page.tsx` | Stats page — computes group-relative maximums, builds rating history, computes MVP counts, passes data to StatsView. |
 | `group/[slug]/payments/page.tsx` | Payment tracker — per-game cost split, paid/unpaid toggles. |
 | `group/[slug]/fields/page.tsx` | Field management — CRUD for fields (name, address, price). |
@@ -68,7 +69,7 @@ tinocup/
 | `layout/BottomNav.tsx` | Bottom navigation bar — Home, Games, Stats, Payments. |
 | `layout/GroupLayout.tsx` | Group page wrapper with header, bottom nav, and optional MVP vote prompt. |
 | `game/SignupPanel.tsx` | Game signup — confirm/decline attendance, phone prompt if missing, generate teams via server action. |
-| `game/TeamDisplay.tsx` | Display generated teams (home vs away). |
+| `game/TeamDisplay.tsx` | Display generated teams (home vs away) with player avatars and names. |
 | `game/ScorePanel.tsx` | Score recording — pure UI for score + goalscorers, delegates all logic to server action. |
 | `game/PaymentPanel.tsx` | Pick-up-the-tab form after game completion + payment summary with MB Way info. |
 | `game/MvpVotePrompt.tsx` | Floating banner + dialog for casting MVP votes after completed games. |
@@ -109,6 +110,7 @@ tinocup/
 | `003_group_slug.sql` | Adds `slug` column to `groups` for human-readable URLs. |
 | `004_game_reminder_sent.sql` | Adds `reminder_sent` flag to games for SMS game-day reminders. |
 | `005_mvp_votes.sql` | MVP voting table with unique constraint per voter per game, RLS policies, and indexes. |
+| `006_auto_goals.sql` | Adds `auto_goals` column to `game_goals` for tracking own goals. |
 
 ### Root
 

@@ -278,15 +278,18 @@ export type Database = {
           game_id: string
           user_id: string
           count: number
+          auto_goals: number
         }
         Insert: {
           id?: string
           game_id: string
           user_id: string
           count?: number
+          auto_goals?: number
         }
         Update: {
           count?: number
+          auto_goals?: number
         }
         Relationships: [
           {
