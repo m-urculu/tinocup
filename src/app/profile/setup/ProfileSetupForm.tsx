@@ -44,7 +44,7 @@ export default function ProfileSetupForm() {
       return
     }
 
-    router.push("/group/new")
+    router.push("/")
   }
 
   return (

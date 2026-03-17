@@ -58,7 +58,8 @@ tinocup/
 | `group/[slug]/stats/page.tsx` | Stats page — computes group-relative maximums, builds rating history, computes MVP counts, passes data to StatsView. |
 | `group/[slug]/payments/page.tsx` | Payment tracker — per-game cost split, paid/unpaid toggles. |
 | `group/[slug]/fields/page.tsx` | Field management — CRUD for fields (name, address, price). |
-| `group/[slug]/settings/page.tsx` | Group settings — avatar upload, phone number, members list with avatars, sign out. |
+| `group/[slug]/settings/page.tsx` | Group settings — avatar upload, phone number, members list with avatars, phone invite (admin), sign out. |
+| `group/[slug]/settings/actions.ts` | Server action to invite a player by phone — creates auth user, profile, group membership, and ratings. |
 
 ### `src/components/`
 

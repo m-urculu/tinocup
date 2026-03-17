@@ -10,7 +10,8 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
-import { LogOut, Crown, Users, Phone, Check, Camera, User } from "lucide-react"
+import { LogOut, Crown, Users, Phone, Check, Camera, User, UserPlus } from "lucide-react"
+import { inviteByPhone } from "./actions"
 import Image from "next/image"
 
 // --- Types ---
@@ -43,6 +44,8 @@ export default function SettingsPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [expandedMember, setExpandedMember] = useState<string | null>(null)
+  const [invitePhone, setInvitePhone] = useState("")
+  const [inviting, setInviting] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -221,6 +224,28 @@ export default function SettingsPage() {
     router.push("/")
   }
 
+  async function handleInvite() {
+    if (!invitePhone.trim() || !groupId) return
+    setInviting(true)
+
+    const { error } = await inviteByPhone(groupId, invitePhone)
+
+    if (error) {
+      toast.error(error)
+    } else {
+      toast.success("Jogador convidado!")
+      setInvitePhone("")
+      // Reload members
+      const { data: m } = await supabase
+        .from("group_members")
+        .select("*, profile:profiles(display_name, phone, avatar_url)")
+        .eq("group_id", groupId)
+        .order("joined_at")
+      if (m) setMembers(m as MemberRow[])
+    }
+    setInviting(false)
+  }
+
   // --- Helpers ---
 
   function getInitials(name: string) {
@@ -379,6 +404,35 @@ export default function SettingsPage() {
           ))}
         </div>
       </div>
+
+      {/* --- Invite Player (admin only) --- */}
+      {members.some((m) => m.user_id === userId && m.role === "admin") && (
+        <div className="glass rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <UserPlus className="size-4 text-electric" />
+            <h3 className="text-base font-semibold">Convidar Jogador</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">
+            Adiciona um jogador pelo número de telefone.
+          </p>
+          <div className="flex gap-2">
+            <Input
+              type="tel"
+              placeholder="9XX XXX XXX"
+              value={invitePhone}
+              onChange={(e) => setInvitePhone(e.target.value)}
+              className="h-10 bg-white/5 border-white/10 flex-1"
+            />
+            <Button
+              onClick={handleInvite}
+              disabled={inviting || !invitePhone.trim()}
+              className="h-10 gradient-gold text-black font-bold hover:opacity-90"
+            >
+              {inviting ? "..." : <UserPlus className="size-4" />}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* --- Actions --- */}
       <Button

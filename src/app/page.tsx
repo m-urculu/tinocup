@@ -39,6 +39,17 @@ export default async function LandingPage() {
       }
     }
 
+    // Check if profile needs name setup (invited users have phone as display_name)
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .single()
+
+    if (prof?.display_name?.startsWith("+")) {
+      redirect("/profile/setup")
+    }
+
     redirect(`/group/${DEFAULT_GROUP_SLUG}`)
   }
 
