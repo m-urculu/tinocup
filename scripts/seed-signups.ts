@@ -1,5 +1,5 @@
 // @file scripts/seed-signups.ts
-// @description Signs up all 12 test users + Owner as confirmed for a game.
+// @description Signs up all 12 test users + the group owner as confirmed for a game.
 //   Run with: npx tsx scripts/seed-signups.ts <gameId>
 
 // --- Config ---
@@ -73,7 +73,7 @@ async function main() {
 
   const groupId = games[0].group_id
 
-  // Find Owner (the real user) — find any user in the group that isn't a test user
+  // Find the group owner — find any user in the group that isn't a test user
   const members = (await adminSelect(
     "group_members",
     `select=user_id&group_id=eq.${groupId}`

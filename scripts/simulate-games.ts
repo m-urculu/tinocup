@@ -20,7 +20,7 @@ const GROUP_ID = "00000000-0000-0000-0000-000000000001"
 const MARCELO_ID = "ba60c0f4-940b-4e54-bf9f-15ff72ada429"
 const FIELD_ID = "427b5c03-ed25-4dec-a309-8908f1192557" // Soccer Planet
 
-// All player IDs (28 test + Owner = 29)
+// All player IDs (28 test + owner = 29)
 const ALL_PLAYERS = [
   MARCELO_ID,
   ...Array.from({ length: 28 }, (_, i) =>
@@ -93,7 +93,7 @@ async function main() {
 
     // Pick random players — shuffle all 29, take enough for the game + a few extras
     let selectedPlayers = shuffle(ALL_PLAYERS)
-    // Include Owner ~75% of the time
+    // Include the owner ~75% of the time
     if (Math.random() > 0.25 && !selectedPlayers.slice(0, totalNeeded).includes(MARCELO_ID)) {
       const marceloIdx = selectedPlayers.indexOf(MARCELO_ID)
       const swapIdx = rand(0, totalNeeded - 1)

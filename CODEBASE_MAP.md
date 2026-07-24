@@ -123,7 +123,7 @@ tinocup/
 
 | File | Description |
 |------|-------------|
-| `seed-test-users.ts` | Seeds 28 synthetic test users with profiles, group membership, and player ratings (all start at 1000, shadow-balanced by tier). |
+| `seed-test-users.ts` | Seeds 28 synthetic test users (fake names/phones) with profiles, group membership, and player ratings (all start at 1000, shadow-balanced by tier). |
 | `seed-signups.ts` | Signs up all test users + real users as confirmed for a given game. |
 | `simulate-games.ts` | Simulates full game lifecycle (create → signup → shadow-balanced teams → score → ratings → payments). |
 | `setup-avatar-bucket.ts` | Creates the Supabase Storage 'avatars' bucket and RLS policies for user avatar uploads. |
